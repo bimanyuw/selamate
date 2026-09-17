@@ -1,4 +1,4 @@
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { Alert } from '@/lib/api';
 
 export default function RiskChart({ alerts }: { alerts: Alert[] }) {
@@ -10,7 +10,7 @@ export default function RiskChart({ alerts }: { alerts: Alert[] }) {
         <XAxis dataKey="level" fontSize={12} />
         <YAxis allowDecimals={false} fontSize={12} />
         <Tooltip />
-        <Bar dataKey="jumlah" name="Jumlah peringatan" fill="var(--secondary)" stroke="var(--primary)" radius={[6, 6, 0, 0]} />
+        <Bar dataKey="jumlah" name="Jumlah peringatan" radius={[6, 6, 0, 0]}>{['#e8b72e', '#f56a0a', '#ce303d'].map(color => <Cell key={color} fill={color} />)}</Bar>
       </BarChart>
     </ResponsiveContainer></div>
     <p className="text-xs text-muted-foreground">{data.map(d => d.level + ': ' + d.jumlah).join(' · ')}</p>

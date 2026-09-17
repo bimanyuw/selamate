@@ -6,6 +6,12 @@ Struktur React/Vite, FastAPI, dan package ai/src/selamate_ai tetap digunakan. Mo
 
 ## Demo lokal
 
+Layar driver memakai dua kolom pada HP: kamera di kiri dan notifikasi admin di kanan, termasuk saat portrait. Preview kamera dibuka langsung dari tombol pengguna sebelum mencoba koneksi sesi backend. Jika koneksi admin gagal, preview tetap aktif dan tombol **Hubungkan ke admin** dapat mencoba koneksi ulang. Jika browser memblokir playback, tekan **Tampilkan kamera**. Video memakai ref stabil agar pembaruan telemetri tidak memasang ulang MediaStream. Error izin kamera ditampilkan dengan instruksi mencoba kembali.
+
+Tampilan mengikuti role: akun **Driver** membuka kamera depan, tombol aktifkan/hentikan, ID sesi dan notifikasi admin pada semua perangkat. Akun **Admin** membuka dashboard kendaraan, peta, grafik dan kontrol operator. Memulai kamera di HP tidak mengisi kondisi lingkungan/batas kecepatan fiktif; komponen risiko tersebut menunggu data yang valid.
+
+Admin login di laptop; daftar driver aktif diperbarui otomatis, dan driver pertama dengan kamera aktif langsung dipantau. Admin dapat memilih driver lain melalui tombol **Pantau** atau memasukkan ID sesi. Dashboard menerima preview kamera serta status kantuk. Admin menulis pesan pada **Notifikasi untuk driver**. Hanya role Admin yang boleh mengirim pesan (`POST /api/driver/sessions/{id}/notifications`). Pesan tampil di HP melalui respons telemetri berkala saat sesi aktif. Pesan disimpan dalam memori per sesi (maksimal 50), hilang ketika sesi dihentikan/server restart, dan bukan push notification saat browser ditutup. Jika model belum tersedia, frame preview tetap dikirim sementara analisis mata dihentikan dengan pesan error yang jelas.
+
 Dari root, terminal 1:
 
 ```powershell
@@ -24,7 +30,7 @@ Untuk HP, buka website melalui HTTPS (reverse proxy atau tunnel HTTPS ke fronten
 
 Isi batas kecepatan, kondisi lingkungan, serta hitungan kejadian manual. Klik **Mulai kamera & GPS**, berikan izin, dan biarkan halaman aktif. GPS speed dapat null; sistem tidak menggantinya dengan angka nol. Jika OBD memberikan kecepatan terbaru, kecepatan OBD diprioritaskan. Data GPS kedaluwarsa setelah 10 detik, OBD setelah 5 detik. Kecepatan GPS dikonversi dari m/s menjadi km/jam.
 
-Model tidak tersedia: kamera/frame menampilkan pesan 503 yang jelas dan pengiriman frame dihentikan; GPS dan scoring lingkungan tetap berjalan. Tidak ada prediksi fatigue palsu. Sediakan models/eye_detector.pt secara terpisah untuk inference sebenarnya. Klik **Hentikan** untuk menutup kamera, GPS, Bluetooth, dan sesi.
+Model tidak tersedia: analisis menampilkan pesan 503 yang jelas dan pengiriman ke endpoint analisis dihentikan; preview kamera, GPS dan notifikasi tetap berjalan. Tidak ada prediksi fatigue palsu. Sediakan models/eye_detector.pt secara terpisah untuk inference sebenarnya. Klik **Hentikan** untuk menutup kamera, GPS, Bluetooth, dan sesi.
 
 ## OBD-II BLE
 

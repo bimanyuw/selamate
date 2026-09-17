@@ -6,10 +6,12 @@
     "frontend"
   ],
   "scripts": {
+    "start": "node scripts/local-start.mjs",
     "dev:frontend": "npm run dev --workspace frontend",
     "dev:backend": "node scripts/backend.mjs dev",
     "db:migrate": "node scripts/backend.mjs migrate",
     "db:seed": "node scripts/backend.mjs seed",
+    "demo:accounts": "node scripts/backend.mjs demo-accounts",
     "build": "npm run build --workspace frontend",
     "test": "node scripts/backend.mjs test"
   },

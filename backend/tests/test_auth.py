@@ -52,6 +52,56 @@ def register(client, email='driver@example.com'):
     return client.post('/api/auth/register', json={'name': ' Driver ', 'email': email, 'password': PASSWORD})
 
 
+def test_two_account_live_camera_and_fatigue(client, monkeypatch):
+    from io import BytesIO
+    from PIL import Image
+    from selamate_ai import fatigue
+    driver, engine = client
+    assert register(driver).status_code == 201
+    session_id = driver.post('/api/driver/sessions').json()['session_id']
+    camera_path = f'/api/driver/sessions/{session_id}/camera'
+    buffer = BytesIO()
+    Image.new('RGB', (64, 48), 'white').save(buffer, format='JPEG')
+    jpeg = buffer.getvalue()
+    assert driver.get('/api/driver/sessions').status_code == 403
+    assert driver.post(camera_path, files={'file': ('frame.jpg', b'invalid', 'image/jpeg')}).status_code == 422
+    assert driver.post(camera_path, files={'file': ('frame.jpg', b'x' * (512 * 1024 + 1), 'image/jpeg')}).status_code == 413
+    with TestClient(app) as admin, TestClient(app) as other:
+        assert register(admin, 'admin@example.com').status_code == 201
+        with Session(engine) as db:
+            account = db.scalar(select(User).where(User.email == 'admin@example.com'))
+            account.role = 'Admin'
+            db.commit()
+        assert register(other, 'other@example.com').status_code == 201
+        assert other.get(camera_path).status_code == 403
+        assert other.post(camera_path, files={'file': ('frame.jpg', jpeg, 'image/jpeg')}).status_code == 403
+        assert admin.get(camera_path).status_code == 404
+        assert driver.post(camera_path, files={'file': ('frame.jpg', jpeg, 'image/jpeg')}).status_code == 200
+        preview = admin.get(camera_path)
+        assert preview.content == jpeg
+        assert preview.headers['cache-control'] == 'no-store'
+        assert preview.headers['content-type'] == 'image/jpeg'
+        listed = admin.get('/api/driver/sessions').json()['sessions']
+        assert listed[0]['session_id'] == session_id
+        assert listed[0]['camera_active'] is True
+        monkeypatch.setattr(fatigue, 'detect_image_bytes', lambda _: 'OPEN')
+        frame_path = f'/api/driver/sessions/{session_id}/frame'
+        for timestamp in range(6):
+            assert driver.post(frame_path, data={'timestamp': str(timestamp)}, files={'file': ('frame.jpg', jpeg, 'image/jpeg')}).status_code == 200
+        assert admin.get(f'/api/driver/sessions/{session_id}').json()['fatigue']['fatigue_status'] == 'ALERT'
+        monkeypatch.setattr(fatigue, 'detect_image_bytes', lambda _: 'CLOSED')
+        for timestamp in range(6, 10):
+            assert driver.post(frame_path, data={'timestamp': str(timestamp)}, files={'file': ('frame.jpg', jpeg, 'image/jpeg')}).status_code == 200
+        assert admin.get(f'/api/driver/sessions/{session_id}').json()['fatigue']['fatigue_status'] == 'FATIGUED'
+        assert admin.post(f'/api/driver/sessions/{session_id}/notifications', json={'message': 'Istirahat di tempat aman'}).status_code == 201
+        assert driver.get(f'/api/driver/sessions/{session_id}').json()['notifications'][0]['message'] == 'Istirahat di tempat aman'
+        driver_routes._sessions[session_id].camera_received -= 20
+        assert admin.get('/api/driver/sessions').json()['sessions'][0]['camera_active'] is False
+        assert driver.post(f'/api/driver/sessions/{session_id}/stop').status_code == 200
+        assert admin.get('/api/driver/sessions').json()['sessions'] == []
+        assert admin.get(camera_path).status_code == 404
+
+
 def test_register_login_logout_and_protected_routes(client):
     browser, engine = client
     assert browser.get('/api/auth/me').status_code == 401

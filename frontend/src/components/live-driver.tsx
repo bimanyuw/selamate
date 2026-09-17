@@ -1,10 +1,17 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { ApiError, createDriverSession, getDriverSession, sendDriverFrame, sendDriverTelemetry, stopDriverSession, type DriverSnapshot, type EnvironmentInput } from '@/lib/api';
+import { ApiError, createDriverSession, getDriverSession, sendDriverCamera, sendDriverFrame, sendDriverTelemetry, stopDriverSession, type DriverSnapshot, type EnvironmentInput } from '@/lib/api';
 import { ObdBle, type ObdReading } from '@/lib/obd-ble';
 
 const inputClass = 'mt-1 block h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm';
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : 'Permintaan gagal.';
+function cameraError(error: unknown) {
+  const name = error instanceof Error ? error.name : '';
+  if (name === 'NotAllowedError' || name === 'SecurityError') return 'Akses kamera ditolak. Izinkan kamera pada pengaturan situs di browser, lalu coba lagi.';
+  if (name === 'NotReadableError') return 'Kamera sedang dipakai aplikasi lain. Tutup aplikasi kamera atau panggilan video, lalu coba lagi.';
+  if (name === 'NotFoundError') return 'Kamera tidak ditemukan pada perangkat ini.';
+  return errorMessage(error);
+}
 type Configuration = { limit: number; braking: number; acceleration: number; turns: number; environment: EnvironmentInput };
 
 export type LiveDriverView = {
@@ -19,6 +26,10 @@ export type LiveDriverView = {
   gpsStatus: string;
   bleStatus: string;
   stop: () => void;
+  startCamera: () => void;
+  monitorSession: (id: string) => void;
+  playCamera: () => void;
+  playbackBlocked: boolean;
   camera: ReactNode;
   configuration: ReactNode;
   obdControls: ReactNode;
@@ -30,6 +41,8 @@ export type LiveDriverView = {
 export default function LiveDriver({ children }: { children: (view: LiveDriverView) => ReactNode }) {
   const [session, setSession] = useState('');
   const [starting, setStarting] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [playbackBlocked, setPlaybackBlocked] = useState(false);
   const [snapshot, setSnapshot] = useState<DriverSnapshot | null>(null);
   const [error, setError] = useState('');
   const [cameraStatus, setCameraStatus] = useState('Kamera belum aktif');
@@ -46,8 +59,34 @@ export default function LiveDriver({ children }: { children: (view: LiveDriverVi
   const controller = useRef<AbortController | null>(null);
   const monitorController = useRef<AbortController | null>(null);
   const sessionRef = useRef('');
+  const startLock = useRef(false);
   const watch = useRef<number | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const attachVideo = useCallback((node: HTMLVideoElement | null) => {
+    video.current = node;
+    if (node) {
+      node.muted = true;
+      node.playsInline = true;
+      node.setAttribute('webkit-playsinline', 'true');
+      if (stream.current && node.srcObject !== stream.current) node.srcObject = stream.current;
+    }
+  }, []);
+
+  async function playCamera() {
+    const preview = video.current;
+    const media = stream.current;
+    if (!preview || !media) return;
+    preview.muted = true;
+    preview.playsInline = true;
+    if (preview.srcObject !== media) preview.srcObject = media;
+    try {
+      await preview.play();
+      if (stream.current === media && media.active) setPlaybackBlocked(false);
+    } catch {
+      if (stream.current === media && media.active) setPlaybackBlocked(true);
+    }
+  }
 
   function cleanup() {
     controller.current?.abort();
@@ -65,15 +104,23 @@ export default function LiveDriver({ children }: { children: (view: LiveDriverVi
 
   function stop() {
     cleanup(); setSession(''); setMonitoring(false); setStarting(false); setSnapshot(null);
+    setCameraActive(false); setPlaybackBlocked(false);
     setCameraStatus('Kamera dihentikan'); setGpsStatus('GPS dihentikan'); setBleStatus('OBD terputus');
   }
 
   async function start(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!window.isSecureContext) { setError('Buka website melalui HTTPS untuk mengakses kamera dan GPS dari HP.'); return; }
     const data = new FormData(event.currentTarget);
     const num = (key: string) => Number(data.get(key));
     const config: Configuration = { limit: num('limit'), braking: num('braking'), acceleration: num('acceleration'), turns: num('turns'), environment: { rainfall: num('rain'), visibility: num('visibility'), road_condition: data.get('road') as EnvironmentInput['road_condition'], slope: num('slope'), disaster_risk: num('disaster') } };
+    await begin(config);
+  }
+
+  async function begin(config?: Configuration) {
+    if (sessionRef.current || startLock.current || monitoring) return;
+    if (!window.isSecureContext) { setError('Kamera HP membutuhkan alamat HTTPS. Buka link HTTPS dari launcher HP, bukan alamat IP dengan http://.'); return; }
+    if (!navigator.mediaDevices?.getUserMedia) { setError('Browser ini tidak menyediakan akses kamera. Buka halaman langsung di Chrome atau Safari.'); return; }
+    startLock.current = true;
     setStarting(true); setError(''); setSnapshot(null);
     const active = new AbortController(); controller.current = active;
     let id = '';
@@ -84,16 +131,41 @@ export default function LiveDriver({ children }: { children: (view: LiveDriverVi
       }
     };
     try {
+      if (!stream.current?.active) {
+        setCameraStatus('Menunggu izin kamera…');
+        let media: MediaStream;
+        try {
+          media = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'user' }, width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+        } catch (failure) {
+          if (active.signal.aborted) return;
+          if (failure instanceof Error && ['OverconstrainedError', 'NotFoundError'].includes(failure.name)) {
+            media = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          } else throw failure;
+        }
+        if (active.signal.aborted) { media.getTracks().forEach(track => track.stop()); return; }
+        stream.current = media;
+        media.getVideoTracks().forEach(track => track.addEventListener('ended', () => {
+          if (stream.current === media) {
+            setCameraActive(false); setCameraStatus('Kamera terputus. Hentikan sesi lalu aktifkan kamera kembali.');
+          }
+        }, { once: true }));
+      }
+      if (!video.current) throw new Error('Preview kamera tidak tersedia');
+      setCameraActive(true);
+      setCameraStatus('Kamera aktif · menghubungkan ke admin…');
+      await playCamera();
+      if (active.signal.aborted) return;
       id = (await createDriverSession(active.signal)).session_id;
       if (active.signal.aborted) { void stopDriverSession(id); return; }
       sessionRef.current = id; setSession(id);
       const began = performance.now();
-      if (navigator.geolocation) {
+      try { if (navigator.geolocation) {
         setGpsStatus('Menunggu izin dan lokasi GPS…');
         watch.current = navigator.geolocation.watchPosition(position => {
           if (!active.signal.aborted) { gps.current = { position, received: performance.now() }; setGpsStatus(`GPS aktif · akurasi ${position.coords.accuracy.toFixed(0)} m`); }
         }, failure => { if (!active.signal.aborted) { gps.current = null; setGpsStatus(`GPS: ${failure.message}`); } }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 });
       } else setGpsStatus('Browser tidak menyediakan GPS');
+      } catch { setGpsStatus('GPS tidak tersedia; kamera tetap aktif.'); }
       const telemetry = async () => {
         try {
           const now = performance.now();
@@ -103,27 +175,19 @@ export default function LiveDriver({ children }: { children: (view: LiveDriverVi
           const speed = reading?.speed != null ? reading.speed : gpsSpeed != null && Number.isFinite(gpsSpeed) && gpsSpeed >= 0 ? gpsSpeed * 3.6 : null;
           const next = await sendDriverTelemetry(id, { latitude: location?.latitude ?? null, longitude: location?.longitude ?? null, accuracy: location?.accuracy ?? null,
             speed_source: speed === null ? null : reading?.speed != null ? 'obd' : 'gps', rpm: reading?.rpm ?? null,
-            behavior: speed === null ? null : { speed, speed_limit: config.limit, harsh_braking: config.braking, harsh_acceleration: config.acceleration, sharp_turns: config.turns }, environment: config.environment }, active.signal);
+            behavior: speed === null || !config ? null : { speed, speed_limit: config.limit, harsh_braking: config.braking, harsh_acceleration: config.acceleration, sharp_turns: config.turns }, environment: config?.environment ?? null }, active.signal);
           if (!active.signal.aborted) setSnapshot(next);
         } catch (failure) { if (!active.signal.aborted) setError(errorMessage(failure)); }
         finally { schedule(() => void telemetry(), 1000); }
       };
       void telemetry();
-      try {
-        if (!navigator.mediaDevices?.getUserMedia) throw new Error('Browser tidak menyediakan akses kamera.');
-        setCameraStatus('Menunggu izin kamera…');
-        const media = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
-        if (active.signal.aborted) { media.getTracks().forEach(track => track.stop()); return; }
-        stream.current = media;
-        if (!video.current) throw new Error('Preview kamera tidak tersedia');
-        video.current.srcObject = media; await video.current.play();
         setCameraStatus('Kamera aktif · mengirim frame berkala');
         const canvas = document.createElement('canvas');
+        let inferenceAvailable = true;
         const capture = async () => {
-          let retry = true;
           try {
             const preview = video.current;
-            if (!preview || preview.readyState < 2) return;
+            if (!preview || preview.readyState < 2 || !preview.videoWidth || !preview.videoHeight) return;
             canvas.width = 640; canvas.height = Math.round(640 * preview.videoHeight / preview.videoWidth);
             const context = canvas.getContext('2d');
             if (!context) throw new Error('Browser tidak mendukung canvas');
@@ -131,19 +195,33 @@ export default function LiveDriver({ children }: { children: (view: LiveDriverVi
             const timestamp = (performance.now() - began) / 1000;
             const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', .65));
             if (!blob) throw new Error('Frame kamera gagal dibuat');
-            const next = await sendDriverFrame(id, blob, timestamp, active.signal);
-            if (!active.signal.aborted) setSnapshot(next);
-          } catch (failure) {
-            if (!active.signal.aborted) setCameraStatus(errorMessage(failure));
-            if (failure instanceof ApiError && [413, 422, 503].includes(failure.status)) {
-              retry = false; stream.current?.getTracks().forEach(track => track.stop()); stream.current = null;
+            await sendDriverCamera(id, blob, active.signal);
+            if (inferenceAvailable) {
+              try {
+                const next = await sendDriverFrame(id, blob, timestamp, active.signal);
+                if (!active.signal.aborted) setSnapshot(next);
+              } catch (failure) {
+                if (failure instanceof ApiError && [422, 503].includes(failure.status)) inferenceAvailable = false;
+                throw failure;
+              }
             }
-          } finally { if (retry) schedule(() => void capture(), 300); }
+          } catch (failure) {
+            if (!active.signal.aborted) setCameraStatus(`Kamera aktif · analisis: ${errorMessage(failure)}`);
+          } finally { schedule(() => void capture(), 300); }
         };
         void capture();
-      } catch (failure) { if (!active.signal.aborted) { stream.current?.getTracks().forEach(track => track.stop()); stream.current = null; setCameraStatus(errorMessage(failure)); } }
-    } catch (failure) { if (!active.signal.aborted) { cleanup(); setSession(''); setStarting(false); setError(errorMessage(failure)); } }
-    finally { if (!active.signal.aborted) setStarting(false); }
+    } catch (failure) {
+      if (!active.signal.aborted) {
+        if (stream.current?.active) {
+          active.abort(); setSession('');
+          setCameraStatus('Kamera aktif · belum terhubung ke admin');
+          setError(`Koneksi admin gagal: ${errorMessage(failure)}. Tekan Hubungkan ke admin untuk mencoba lagi.`);
+        } else {
+          cleanup(); setSession(''); setCameraActive(false);
+          setCameraStatus(cameraError(failure)); setError(cameraError(failure));
+        }
+      }
+    } finally { startLock.current = false; setStarting(false); }
   }
 
   async function connectObd(event: FormEvent<HTMLFormElement>) {
@@ -160,12 +238,14 @@ export default function LiveDriver({ children }: { children: (view: LiveDriverVi
     finally { setBleBusy(false); }
   }
 
-  function monitor() {
+  function monitor(id = monitorId.trim()) {
+    if (sessionRef.current || startLock.current || !id) return;
+    setMonitorId(id);
     monitorController.current?.abort();
     const active = new AbortController(); monitorController.current = active;
     setMonitoring(true); setError(''); setSnapshot(null);
     const read = async () => {
-      try { const next = await getDriverSession(monitorId.trim(), active.signal); if (!active.signal.aborted) setSnapshot(next); }
+      try { const next = await getDriverSession(id, active.signal); if (!active.signal.aborted) setSnapshot(next); }
       catch (failure) { if (!active.signal.aborted) { setError(errorMessage(failure)); active.abort(); setMonitoring(false); } }
       if (!active.signal.aborted) { const timer = setTimeout(() => { timers.current = timers.current.filter(value => value !== timer); void read(); }, 1000); timers.current.push(timer); }
     };
@@ -187,14 +267,14 @@ export default function LiveDriver({ children }: { children: (view: LiveDriverVi
       </details>
   );
   const monitorControls = (
-!session && !starting && <div className="mt-5"><label className="text-xs">Pantau sesi dari perangkat lain<input className={inputClass} value={monitorId} onChange={event => setMonitorId(event.target.value)} disabled={monitoring} placeholder="ID sesi pengemudi" /></label><Button className="mt-2" variant="outline" disabled={!monitorId.trim() || monitoring} onClick={monitor}>Pantau sesi</Button></div>
+!session && !starting && <div className="mt-5"><label className="text-xs">Pantau sesi dari perangkat lain<input className={inputClass} value={monitorId} onChange={event => setMonitorId(event.target.value)} disabled={monitoring} placeholder="ID sesi pengemudi" /></label><Button className="mt-2" variant="outline" disabled={!monitorId.trim() || monitoring} onClick={() => monitor()}>Pantau sesi</Button></div>
   );
   return children({
     session, sessionKey: session || (monitoring ? monitorId.trim() : ''),
     starting, monitoring, snapshot, error,
-    cameraActive: !!stream.current?.active,
-    cameraStatus, gpsStatus, bleStatus, stop,
-    camera: <video ref={video} autoPlay muted playsInline className="driver-video" aria-label="Preview kamera pengemudi" />,
+    cameraActive, playbackBlocked, playCamera: () => void playCamera(),
+    cameraStatus, gpsStatus, bleStatus, stop, startCamera: () => void begin(), monitorSession: monitor,
+    camera: <video ref={attachVideo} autoPlay muted playsInline onPlaying={() => setPlaybackBlocked(false)} className="driver-video" aria-label="Preview kamera pengemudi" />,
     configuration, obdControls, monitorControls,
   });
 }

@@ -128,7 +128,21 @@ export type DriverTelemetry = {
   speed_source: 'gps' | 'obd' | null; rpm: number | null;
   behavior: BehaviorInput | null; environment: EnvironmentInput | null;
 };
+export type DriverNotification = { id: string; message: string; sender: string; created_at: number; kind?: 'text' | 'ringtone'; expires_at?: number | null; state?: 'pending' | 'ringing' | 'acknowledged' | null };
+export function notifyDriver(id: string, message: string, kind: 'text' | 'ringtone' = 'text'): Promise<DriverNotification> {
+  return post(`driver/sessions/${encodeURIComponent(id)}/notifications`, { message, kind });
+}
+export function setDriverAudio(id: string, enabled: boolean, signal?: AbortSignal): Promise<{ audio_ready: boolean }> {
+  return post(`driver/sessions/${encodeURIComponent(id)}/audio`, { enabled }, signal);
+}
+export function updateDriverAlarm(id: string, notificationId: string, state: 'ringing' | 'acknowledged'): Promise<DriverNotification> {
+  return post(`driver/sessions/${encodeURIComponent(id)}/notifications/${encodeURIComponent(notificationId)}/state`, { state });
+}
 export type DriverSnapshot = {
+  audio_ready?: boolean;
+  camera_version?: number;
+  camera_age_seconds?: number | null;
+  notifications?: DriverNotification[];
   telemetry: DriverTelemetry | null;
   fatigue: (FatigueResponse & { eye_state: 'OPEN' | 'CLOSED' | 'UNKNOWN' }) | null;
   behavior: BehaviorResponse | null; environment: EnvironmentResponse | null; risk: RiskResponse | null;
@@ -157,6 +171,18 @@ export type AuthUser = { id: string; name: string; email: string; role: 'Admin' 
 export type AdminSummary = { activeUsers: number; systemStatus: string; dataSource: string };
 export function getAdminSummary(signal?: AbortSignal): Promise<AdminSummary> {
   return request('admin/summary', { signal });
+}
+export type ActiveDriverSession = { session_id: string; driver_name: string; camera_active: boolean; fatigue_status: FatigueResponse['fatigue_status'] | null; latitude?: number | null; longitude?: number | null; telemetry_age_seconds?: number | null };
+export function getActiveDriverSessions(signal?: AbortSignal): Promise<{ sessions: ActiveDriverSession[] }> {
+  return request('driver/sessions', { signal });
+}
+export function driverCameraUrl(id: string, version: number): string {
+  return apiUrl(`driver/sessions/${encodeURIComponent(id)}/camera?v=${version}`);
+}
+export function sendDriverCamera(id: string, frame: Blob, signal?: AbortSignal): Promise<{ camera_version: number }> {
+  const body = new FormData();
+  body.append('file', frame, 'frame.jpg');
+  return request(`driver/sessions/${encodeURIComponent(id)}/camera`, { method: 'POST', body, signal });
 }
 export function getCurrentUser(signal?: AbortSignal): Promise<AuthUser> {
   return request('auth/me', { signal });

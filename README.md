@@ -27,6 +27,20 @@ requirements.lock.txt menyimpan versi Python hasil instalasi; untuk mereproduksi
 
 ## Menjalankan demo
 
+### Sekali klik di Windows
+
+Setelah instalasi selesai, klik dua kali `Jalankan-Selamate.cmd`, atau jalankan `npm.cmd start` dari root proyek. Launcher menyalakan Docker Desktop bila perlu, menjalankan database dan migrasi, lalu membuka backend serta frontend dalam satu jendela. Alamat tetap **http://localhost:5173**; tidak memerlukan Cloudflare, VS Code, atau Jupyter. Tutup dengan Ctrl+C. Database Docker tetap berjalan.
+
+Hentikan terminal backend/frontend lama sebelum memakai launcher. Launcher menggunakan API lokal meskipun frontend/.env.local berisi URL tunnel lama. Deteksi kantuk tetap membutuhkan model terlatih `models/eye_detector.pt` dan dependensi `ai[vision]`; Jupyter hanya diperlukan jika ingin melatih model. Untuk kamera dari HP, localhost mengarah ke HP itu sendiri; gunakan HTTPS LAN yang dipercaya atau tunnel dengan domain tetap. Launcher ini untuk browser di laptop.
+
+### HP dan laptop dengan alamat HTTPS tetap
+
+Setup sekali: install Tailscale dari https://tailscale.com/download di Windows dan HP, lalu login dengan akun yang sama dan aktifkan koneksinya. Klik dua kali `Jalankan-Selamate-HP.cmd`. Launcher akan menampilkan alamat HTTPS tetap `https://nama-laptop.nama-jaringan.ts.net`, yang dapat dibuka pada laptop dan HP tanpa Cloudflare atau Jupyter. Jika Tailscale Serve pertama kali meminta aktivasi HTTPS, ikuti link yang ditampilkan dan jalankan launcher lagi. Mode ini mengatur origin autentikasi serta proxy secara otomatis. Port Serve 443 harus belum dipakai layanan Tailscale lain. Alamat tetap selama identitas/nama perangkat dan jaringan Tailscale tidak diubah. Laptop tetap harus menyala dan launcher tetap terbuka; Tailscale di HP harus aktif.
+
+Di HP buka alamat HTTPS yang ditampilkan, bukan localhost. Kamera/GPS meminta izin browser. Deteksi kantuk tetap membutuhkan model mata dan ai[vision]. Bluetooth BLE membutuhkan browser dan adaptor yang mendukungnya.
+
+### Menjalankan terminal secara terpisah
+
 Terminal pertama:
 
 ```powershell

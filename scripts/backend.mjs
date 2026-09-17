@@ -13,6 +13,7 @@ const commands = {
   dev: ['-m', 'uvicorn', 'selamate_backend.main:app', '--reload', '--reload-dir', 'backend/src', '--reload-dir', 'ai/src', '--host', '127.0.0.1', '--port', '3001'],
   migrate: ['-m', 'alembic', '-c', 'backend/alembic.ini', 'upgrade', 'head'],
   seed: ['-m', 'selamate_backend.seed'],
+  'demo-accounts': ['-m', 'selamate_backend.demo_accounts'],
   test: ['-m', 'pytest', 'backend/tests', 'ai/tests', '-q'],
 };
 const args = commands[process.argv[2]];
