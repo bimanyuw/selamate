@@ -76,6 +76,8 @@ Tes database otomatis menggunakan SQLite terisolasi untuk logika query; PostgreS
 
 ## API
 
+Register/login tersedia pada `/register` dan `/login`, dengan logout di header dashboard. Jalankan PostgreSQL dan `npm.cmd run db:migrate` untuk tabel akun. Autentikasi memakai backend yang sama; akun tetap membutuhkan database ketika DATA_SOURCE=simulation. Endpoint `/api/auth/register`, `/api/auth/login`, `/api/auth/me`, dan `/api/auth/logout` mengelola cookie sesi HttpOnly. Alerts dan endpoint AI/pengemudi memerlukan login. Untuk deployment HTTPS gunakan AUTH_COOKIE_SECURE=true. Hosting frontend menyediakan SPA fallback untuk halaman auth.
+
 - GET /api/health — status API, bukan jaminan koneksi database.
 - GET /api/health/database — pemeriksaan koneksi database (503 jika tidak tersedia).
 - GET /api/alerts — data simulasi atau record database sesuai konfigurasi.

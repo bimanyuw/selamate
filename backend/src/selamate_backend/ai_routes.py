@@ -3,13 +3,14 @@ import logging
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from selamate_ai import behavior, environment, fatigue, fusion
 
 from .config import settings
 from .schemas import BehaviorRequest, EnvironmentRequest, RiskRequest
+from .auth import get_current_user
 
-router = APIRouter(tags=["AI"])
+router = APIRouter(tags=["AI"], dependencies=[Depends(get_current_user)])
 logger = logging.getLogger(__name__)
 
 

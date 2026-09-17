@@ -1,5 +1,7 @@
 # Frontend
 
+Halaman `/login` dan `/register` mengikuti palet yang sama. Dashboard membutuhkan sesi login; logout tersedia di header. Cookie HttpOnly dikirim melalui fetch credentials=include, tanpa token/password di localStorage. Sesi dipulihkan lewat /api/auth/me saat refresh. Backend harus memiliki PostgreSQL dan migrasi akun meskipun alerts memakai simulation. Hosting production harus menyediakan SPA fallback ke index.html untuk /login dan /register, setelah aturan proxy /api.
+
 Mode pengemudi kamera/GPS/OBD BLE dan monitoring sesi: lihat [REALTIME.md](REALTIME.md).
 
 React + TypeScript + Vite, Tailwind melalui plugin Vite. Alias @/ mengarah ke src/.

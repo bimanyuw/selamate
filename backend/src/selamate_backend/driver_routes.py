@@ -7,12 +7,14 @@ from threading import Lock
 from time import monotonic
 from uuid import uuid4
 
-from fastapi import APIRouter, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 from pydantic import Field
 from selamate_ai import behavior, environment, fatigue, fusion
 from .schemas import AIRequest, BehaviorRequest, EnvironmentRequest
+from .auth import get_current_user
+from .models import User
 
-router = APIRouter(prefix="/driver/sessions", tags=["Driver realtime"])
+router = APIRouter(prefix="/driver/sessions", tags=["Driver realtime"], dependencies=[Depends(get_current_user)])
 
 
 class TelemetryRequest(AIRequest):
@@ -27,6 +29,7 @@ class TelemetryRequest(AIRequest):
 
 @dataclass
 class DriverSession:
+    owner_id: str = ""
     touched: float = field(default_factory=monotonic)
     lock: Lock = field(default_factory=Lock)
     observations: deque = field(default_factory=lambda: deque(maxlen=300))
@@ -50,12 +53,14 @@ def _prune():
             del _sessions[key]
 
 
-def _session(session_id):
+def _session(session_id, owner_id=None):
     with _sessions_lock:
         _prune()
         session = _sessions.get(session_id)
         if session is None:
             raise HTTPException(404, "Sesi tidak ditemukan atau sudah kedaluwarsa")
+        if owner_id is not None and session.owner_id != owner_id:
+            raise HTTPException(403, "Sesi pengemudi milik pengguna lain")
         session.touched = monotonic()
         return session
 
@@ -75,13 +80,13 @@ def _snapshot(session):
 
 
 @router.post("")
-def create_session():
+def create_session(user: User = Depends(get_current_user)):
     with _sessions_lock:
         _prune()
         if len(_sessions) >= 128:
             raise HTTPException(503, "Kapasitas sesi penuh; hentikan sesi yang tidak digunakan")
         session_id = str(uuid4())
-        _sessions[session_id] = DriverSession()
+        _sessions[session_id] = DriverSession(owner_id=user.id)
     return {"session_id": session_id, "expires_after_idle_seconds": SESSION_TTL}
 
 
@@ -93,15 +98,18 @@ def session_snapshot(session_id: str):
 
 
 @router.post("/{session_id}/stop")
-def stop_session(session_id: str):
+def stop_session(session_id: str, user: User = Depends(get_current_user)):
     with _sessions_lock:
+        existing = _sessions.get(session_id)
+        if existing and existing.owner_id != user.id:
+            raise HTTPException(403, "Sesi pengemudi milik pengguna lain")
         _sessions.pop(session_id, None)
     return {"status": "stopped"}
 
 
 @router.post("/{session_id}/telemetry")
-def update_telemetry(session_id: str, payload: TelemetryRequest):
-    session = _session(session_id)
+def update_telemetry(session_id: str, payload: TelemetryRequest, user: User = Depends(get_current_user)):
+    session = _session(session_id, user.id)
     try:
         behavior_result = behavior.score_behavior(**payload.behavior.model_dump()) if payload.behavior else None
         environment_result = environment.score_environment(**payload.environment.model_dump()) if payload.environment else None
@@ -116,11 +124,11 @@ def update_telemetry(session_id: str, payload: TelemetryRequest):
 
 
 @router.post("/{session_id}/frame")
-def update_frame(session_id: str, file: UploadFile, timestamp: float = Form(ge=0)):
+def update_frame(session_id: str, file: UploadFile, timestamp: float = Form(ge=0), user: User = Depends(get_current_user)):
     try:
         if not math.isfinite(timestamp):
             raise HTTPException(422, "Timestamp harus berupa detik yang valid")
-        session = _session(session_id)
+        session = _session(session_id, user.id)
         if file.content_type not in {"image/jpeg", "image/png"}:
             raise HTTPException(422, "Frame harus JPEG atau PNG")
         data = file.file.read(512 * 1024 + 1)

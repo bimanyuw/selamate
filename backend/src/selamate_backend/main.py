@@ -17,6 +17,7 @@ from .models import Alert
 from .schemas import AlertResponse, AlertsResponse
 from .ai_routes import router as ai_router
 from .driver_routes import router as driver_router
+from .auth import router as auth_router, get_current_user
 
 app = FastAPI(title="Selamate EWS API", version="0.2.0")
 app.add_middleware(
@@ -29,6 +30,7 @@ app.add_middleware(
 app.include_router(ai_router, prefix="/api")
 app.include_router(ai_router, include_in_schema=False)
 app.include_router(driver_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
 
 
 @app.exception_handler(RequestValidationError)
@@ -56,7 +58,7 @@ def database_health(session: Annotated[Session, Depends(get_session)]):
     return {"status": "ok", "service": "postgresql"}
 
 
-@app.get("/api/alerts", response_model=AlertsResponse)
+@app.get("/api/alerts", response_model=AlertsResponse, dependencies=[Depends(get_current_user)])
 def alerts(session: Annotated[Session, Depends(get_session)]):
     if settings.data_source == "simulation":
         rows = json.loads((ROOT / "data/samples/alerts.json").read_text(encoding="utf-8"))

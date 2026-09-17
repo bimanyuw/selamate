@@ -1,5 +1,7 @@
 # Website pengemudi realtime
 
+Login atau register terlebih dahulu. Akun membutuhkan PostgreSQL dan `npm.cmd run db:migrate`, termasuk pada mode simulation. Dashboard pemantau juga harus login; ID sesi yang dibagikan mengizinkan pembacaan snapshot, sedangkan pengiriman frame/telemetri dan penghentian sesi hanya untuk pemilik.
+
 Struktur React/Vite, FastAPI, dan package ai/src/selamate_ai tetap digunakan. Mode upload/manual yang lama tetap tersedia. Panel **Mode pengemudi realtime** mengirim JPEG kamera depan secara berurutan, GPS, dan pembacaan OBD-II BLE ke backend yang sama. Semua request menggunakan VITE_API_BASE_URL.
 
 ## Demo lokal

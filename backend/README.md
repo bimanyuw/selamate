@@ -1,5 +1,13 @@
 # Backend
 
+## Register, login, logout
+
+Akun disimpan di PostgreSQL, termasuk ketika DATA_SOURCE=simulation. Jalankan `npm.cmd run db:migrate` untuk tabel users/auth_sessions. Endpoint: POST /api/auth/register (name/email/password), POST /api/auth/login (email/password), GET /api/auth/me, POST /api/auth/logout. Register langsung membuat sesi login. Password 8–128 karakter di-hash Argon2id; token sesi acak hanya disimpan sebagai hash di database. Cookie HttpOnly berlaku 7 hari secara default; logout mencabut token server-side. Registrasi dan login dibatasi per IP dalam proses backend.
+
+Dashboard, alerts, AI scoring/upload, dan sesi pengemudi memerlukan login. Health dan status registry tetap publik. Endpoint mutation sesi pengemudi hanya untuk pemilik sesi; pengguna login lain bisa memantau dengan ID sesi yang dibagikan. Penyimpanan window pengemudi masih memakai satu worker.
+
+AUTH_COOKIE_SECURE=false, AUTH_COOKIE_SAMESITE=lax untuk localhost. Pada HTTPS production gunakan AUTH_COOKIE_SECURE=true. Jika frontend dan backend benar-benar cross-site, gunakan AUTH_COOKIE_SAMESITE=none dengan secure=true, CORS_ORIGINS eksplisit, dan browser yang mengizinkan cookie lintas situs; satu domain dengan reverse proxy /api lebih sederhana. AUTH_SESSION_SECONDS default 604800. Origin browser diperiksa terhadap origin request atau CORS_ORIGINS; reverse proxy perlu menjaga header Host/proxy agar origin konsisten. Email belum diverifikasi, dan reset password belum disediakan.
+
 Endpoint sesi pengemudi realtime berada di `src/selamate_backend/driver_routes.py` pada aplikasi yang sama. Gunakan satu worker untuk penyimpanan sesi dalam memori. Alur HP/HTTPS dan kontrak endpoint dijelaskan di [frontend/REALTIME.md](../frontend/REALTIME.md).
 
 Backend Node.js awal telah diganti FastAPI. Package: src/selamate_backend.

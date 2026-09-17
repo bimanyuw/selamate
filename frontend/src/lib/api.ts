@@ -79,12 +79,13 @@ function errorDetail(body: unknown): string | undefined {
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(apiUrl(path), options);
+    response = await fetch(apiUrl(path), { ...options, credentials: 'include' });
   } catch (error) {
     if (options.signal?.aborted) throw error;
     throw new Error('Tidak dapat terhubung ke backend. Periksa koneksi dan alamat API.');
   }
   if (!response.ok) {
+    if (response.status === 401 && !path.startsWith('auth/')) window.dispatchEvent(new Event('selamate:unauthorized'));
     const body: unknown = await response.json().catch(() => null);
     throw new ApiError(errorDetail(body) || `Permintaan API gagal (HTTP ${response.status}).`, response.status);
   }
@@ -150,4 +151,18 @@ export function getDriverSession(id: string, signal?: AbortSignal): Promise<Driv
 }
 export function stopDriverSession(id: string): Promise<{ status: string }> {
   return post(`driver/sessions/${encodeURIComponent(id)}/stop`, {});
+}
+
+export type AuthUser = { id: string; name: string; email: string };
+export function getCurrentUser(signal?: AbortSignal): Promise<AuthUser> {
+  return request('auth/me', { signal });
+}
+export function loginUser(email: string, password: string): Promise<AuthUser> {
+  return post('auth/login', { email, password });
+}
+export function registerUser(name: string, email: string, password: string): Promise<AuthUser> {
+  return post('auth/register', { name, email, password });
+}
+export function logoutUser(): Promise<{ status: string }> {
+  return post('auth/logout', {});
 }

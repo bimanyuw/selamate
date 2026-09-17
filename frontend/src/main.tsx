@@ -2,15 +2,16 @@ import React, { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RefreshCw, ShieldCheck, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getAlerts, type AlertsResponse } from '@/lib/api';
+import { getAlerts, type AlertsResponse, type AuthUser } from '@/lib/api';
 import DriverRisk from '@/components/driver-risk';
 import LiveDriver from '@/components/live-driver';
+import AuthShell from '@/components/auth-shell';
 import './styles.css';
 
 const RiskMap = lazy(() => import('@/components/risk-map'));
 const RiskChart = lazy(() => import('@/components/risk-chart'));
 
-function App() {
+function App({ user, logout, loggingOut, logoutError }: { user: AuthUser; logout: () => void; loggingOut: boolean; logoutError: string }) {
   const [data, setData] = useState<AlertsResponse | null>(null);
   const [region, setRegion] = useState('Semua wilayah');
   const [error, setError] = useState('');
@@ -52,9 +53,10 @@ function App() {
   return <div className="mx-auto max-w-6xl px-5 sm:px-8">
     <header className="flex items-center justify-between gap-4 py-7">
       <a href="/" className="flex items-center gap-2 text-2xl font-bold tracking-tight"><ShieldCheck className="size-8" />selamate</a>
-      <span className="rounded-full border border-border bg-accent px-3 py-2 text-xs">Lingkungan pengembangan</span>
+      <div className="flex min-w-0 items-center gap-3"><span className="hidden max-w-48 truncate text-sm sm:block">Halo, {user.name}</span><Button variant="outline" onClick={logout} disabled={loggingOut}>{loggingOut ? 'Keluar…' : 'Logout'}</Button></div>
     </header>
     <main className="pb-12">
+      {logoutError && <p role="alert" className="mb-4 rounded-xl border border-warning/30 bg-warning-background p-3 text-sm text-warning-foreground">{logoutError}</p>}
       <section className="flex items-center justify-between overflow-hidden rounded-3xl bg-primary px-7 py-10 text-primary-foreground sm:px-12">
         <div><p className="text-xs font-semibold tracking-[.2em] text-background">PANTAU. PAHAMI. ANTISIPASI.</p>
           <h1 className="my-6 text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">Lebih siap,<br />lebih terlindungi.</h1>
@@ -95,4 +97,4 @@ function App() {
   </div>;
 }
 
-createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);
+createRoot(document.getElementById('root')!).render(<React.StrictMode><AuthShell>{(user, logout, loggingOut, logoutError) => <App user={user} logout={logout} loggingOut={loggingOut} logoutError={logoutError} />}</AuthShell></React.StrictMode>);
