@@ -63,11 +63,11 @@ export default function AuthShell({ children }: Props) {
   if (checking) return <main className="flex min-h-screen items-center justify-center text-sm" role="status">Memeriksa sesi…</main>;
   if (user) return children(user, () => void logout(), loggingOut, logoutError);
 
-  return <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-5 sm:px-8">
-    <header className="py-7"><a href="/login" onClick={event => { event.preventDefault(); navigate('/login'); }} className="inline-flex items-center gap-2 text-2xl font-bold tracking-tight"><ShieldCheck className="size-8 text-primary" />selamate</a></header>
-    <main className="my-auto grid overflow-hidden rounded-3xl border border-border bg-surface md:grid-cols-2">
-      <section className="bg-primary p-8 text-primary-foreground sm:p-12"><ShieldCheck className="size-16 text-secondary" strokeWidth={1} /><p className="mt-8 text-xs font-semibold tracking-[.2em]">PANTAU. PAHAMI. ANTISIPASI.</p><h1 className="mt-5 text-4xl font-semibold leading-tight">Perjalanan lebih siap,<br />lebih terlindungi.</h1><p className="mt-5 text-sm leading-7 text-primary-foreground/90">Pantau kondisi perjalanan, kelelahan, dan risiko lingkungan dalam satu dashboard.</p></section>
-      <section className="p-7 sm:p-10"><p className="text-xs font-semibold tracking-widest text-primary">SELAMAT DATANG</p><h2 className="mt-3 text-3xl font-semibold">{registering ? 'Buat akun' : 'Login'}</h2><p className="mt-3 text-sm text-muted-foreground">{registering ? 'Daftar untuk mulai menggunakan selamate.' : 'Masuk untuk melanjutkan ke dashboard.'}</p>
+  return <div className="auth-page">
+    <header className="auth-header"><a href="/login" onClick={event => { event.preventDefault(); navigate('/login'); }} className="auth-brand"><img src="/brand/selamate-logo.png" alt="" /><span><img src="/brand/selamate-wordmark.png" alt="SelaMate" /><small>sampai tujuan</small></span></a><span className="auth-header-note">EARLY WARNING SYSTEM</span></header>
+    <main className="auth-card">
+      <section className="auth-story"><div className="auth-story-content"><span className="auth-shield"><ShieldCheck /></span><p className="auth-kicker">PANTAU. PAHAMI. ANTISIPASI.</p><h1>Perjalanan lebih siap,<br />lebih terlindungi.</h1><p>Pantau kondisi perjalanan, kelelahan pengemudi, dan risiko lingkungan dalam satu pusat kendali.</p><div className="auth-feature-row"><span><i />Pemantauan armada</span><span><i />Peringatan risiko</span><span><i />Keselamatan driver</span></div></div><p className="auth-map-label">JAWA · INDONESIA <span>LIVE SAFETY NETWORK</span></p></section>
+      <section className="auth-form-panel"><div className="auth-form-heading"><p>{registering ? 'PENDAFTARAN AKUN' : 'SELAMAT DATANG'}</p><h2>{registering ? 'Buat akun' : 'Login'}</h2><span>{registering ? 'Daftar untuk mulai menggunakan SelaMate.' : 'Masuk untuk melanjutkan ke dashboard.'}</span></div>
         <form key={registering ? 'register' : 'login'} className="mt-7" onSubmit={event => void submit(event)}>
           <fieldset disabled={busy} className="space-y-4">
             {registering && <label className="block text-sm">Nama lengkap<input className={inputClass} name="name" autoComplete="name" maxLength={120} required /></label>}
@@ -78,8 +78,8 @@ export default function AuthShell({ children }: Props) {
           </fieldset>
         </form>
         {error && <p className="mt-4 rounded-lg border border-warning/30 bg-warning-background p-3 text-sm text-warning-foreground" role="alert">{error}</p>}
-        <p className="mt-6 text-sm text-muted-foreground">{registering ? 'Sudah punya akun? ' : 'Belum punya akun? '}<a className="font-semibold text-primary underline underline-offset-4" href={registering ? '/login' : '/register'} onClick={event => { event.preventDefault(); if (!busy) navigate(registering ? '/login' : '/register'); }}>{registering ? 'Login' : 'Daftar sekarang'}</a></p>
+        <p className="auth-switch">{registering ? 'Sudah punya akun? ' : 'Belum punya akun? '}<a href={registering ? '/login' : '/register'} onClick={event => { event.preventDefault(); if (!busy) navigate(registering ? '/login' : '/register'); }}>{registering ? 'Login' : 'Daftar sekarang'}</a></p>
       </section>
-    </main><footer className="py-7 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Selamate</footer>
+    </main><footer className="auth-footer"><span>© {new Date().getFullYear()} SelaMate</span><span>Fondasi informasi untuk kesiapsiagaan bersama.</span></footer>
   </div>;
 }
