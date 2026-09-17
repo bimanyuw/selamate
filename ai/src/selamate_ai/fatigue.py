@@ -100,6 +100,23 @@ def analyze_fatigue(observations, end_timestamp=None, max_observation_gap=1.0):
 
 
 
+def detect_image_bytes(data):
+    """Decode an uploaded image in memory; no fake inference or disk writes."""
+    try:
+        import cv2
+        import numpy as np
+    except ImportError as exc:
+        raise ImportError('Frame inference requires: pip install -e "./ai[vision]"') from exc
+    if not data:
+        raise ValueError("Frame kosong")
+    frame = cv2.imdecode(np.frombuffer(data, dtype=np.uint8), cv2.IMREAD_COLOR)
+    if frame is None:
+        raise ValueError("Frame tidak dapat dibaca")
+    if frame.shape[0] > 2048 or frame.shape[1] > 2048:
+        raise ValueError("Dimensi frame maksimal 2048 piksel")
+    return detect_eye_state(frame)
+
+
 def analyze_video(video_path, max_duration_seconds=300):
     """Decode every frame and infer eye states; timestamps use video FPS.
 

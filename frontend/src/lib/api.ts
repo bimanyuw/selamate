@@ -121,3 +121,33 @@ export function analyzeFatigue(video: File, signal?: AbortSignal): Promise<Fatig
 export function fuseRisk(input: RiskInput, signal?: AbortSignal): Promise<RiskResponse> {
   return post('risk', input, signal);
 }
+
+export type DriverTelemetry = {
+  latitude: number | null; longitude: number | null; accuracy: number | null;
+  speed_source: 'gps' | 'obd' | null; rpm: number | null;
+  behavior: BehaviorInput | null; environment: EnvironmentInput | null;
+};
+export type DriverSnapshot = {
+  telemetry: DriverTelemetry | null;
+  fatigue: (FatigueResponse & { eye_state: 'OPEN' | 'CLOSED' | 'UNKNOWN' }) | null;
+  behavior: BehaviorResponse | null; environment: EnvironmentResponse | null; risk: RiskResponse | null;
+  frame_age_seconds: number | null; telemetry_age_seconds: number | null;
+};
+export function createDriverSession(signal?: AbortSignal): Promise<{ session_id: string }> {
+  return post('driver/sessions', {}, signal);
+}
+export function sendDriverTelemetry(id: string, data: DriverTelemetry, signal?: AbortSignal): Promise<DriverSnapshot> {
+  return post(`driver/sessions/${encodeURIComponent(id)}/telemetry`, data, signal);
+}
+export function sendDriverFrame(id: string, frame: Blob, timestamp: number, signal?: AbortSignal): Promise<DriverSnapshot> {
+  const body = new FormData();
+  body.append('file', frame, 'frame.jpg');
+  body.append('timestamp', String(timestamp));
+  return request(`driver/sessions/${encodeURIComponent(id)}/frame`, { method: 'POST', body, signal });
+}
+export function getDriverSession(id: string, signal?: AbortSignal): Promise<DriverSnapshot> {
+  return request(`driver/sessions/${encodeURIComponent(id)}`, { signal });
+}
+export function stopDriverSession(id: string): Promise<{ status: string }> {
+  return post(`driver/sessions/${encodeURIComponent(id)}/stop`, {});
+}

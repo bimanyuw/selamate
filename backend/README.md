@@ -1,5 +1,7 @@
 # Backend
 
+Endpoint sesi pengemudi realtime berada di `src/selamate_backend/driver_routes.py` pada aplikasi yang sama. Gunakan satu worker untuk penyimpanan sesi dalam memori. Alur HP/HTTPS dan kontrak endpoint dijelaskan di [frontend/REALTIME.md](../frontend/REALTIME.md).
+
 Backend Node.js awal telah diganti FastAPI. Package: src/selamate_backend.
 Install backend dan ai di .venv root; jalankan npm.cmd run dev:backend dari root.
 Dokumentasi: http://127.0.0.1:3001/docs.

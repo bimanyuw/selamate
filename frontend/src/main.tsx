@@ -4,6 +4,7 @@ import { RefreshCw, ShieldCheck, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getAlerts, type AlertsResponse } from '@/lib/api';
 import DriverRisk from '@/components/driver-risk';
+import LiveDriver from '@/components/live-driver';
 import './styles.css';
 
 const RiskMap = lazy(() => import('@/components/risk-map'));
@@ -88,6 +89,7 @@ function App() {
         {data && !filtered.length && <p className="rounded-xl border border-border p-6 text-sm">Belum ada peringatan pada data yang tersedia.</p>}
       </section>
       <DriverRisk />
+      <LiveDriver />
     </main>
     <footer className="flex flex-wrap justify-between gap-3 border-t border-border py-6 text-xs text-muted-foreground"><span>© {new Date().getFullYear()} Selamate</span><span>Fondasi informasi untuk kesiapsiagaan bersama.</span></footer>
   </div>;

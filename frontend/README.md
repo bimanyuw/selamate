@@ -1,5 +1,7 @@
 # Frontend
 
+Mode pengemudi kamera/GPS/OBD BLE dan monitoring sesi: lihat [REALTIME.md](REALTIME.md).
+
 React + TypeScript + Vite, Tailwind melalui plugin Vite. Alias @/ mengarah ke src/.
 components.json dan src/components/ui/button.tsx menyiapkan pola shadcn/ui; komponen dimiliki dan dapat diedit di proyek.
 
