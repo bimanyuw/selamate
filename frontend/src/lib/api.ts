@@ -153,7 +153,11 @@ export function stopDriverSession(id: string): Promise<{ status: string }> {
   return post(`driver/sessions/${encodeURIComponent(id)}/stop`, {});
 }
 
-export type AuthUser = { id: string; name: string; email: string };
+export type AuthUser = { id: string; name: string; email: string; role: 'Admin' | 'Driver' };
+export type AdminSummary = { activeUsers: number; systemStatus: string; dataSource: string };
+export function getAdminSummary(signal?: AbortSignal): Promise<AdminSummary> {
+  return request('admin/summary', { signal });
+}
 export function getCurrentUser(signal?: AbortSignal): Promise<AuthUser> {
   return request('auth/me', { signal });
 }

@@ -15,6 +15,22 @@ from selamate_backend.config import settings
 PASSWORD = 'Example-password-123'
 
 
+def test_persistent_admin_authorization(client):
+    browser, engine = client
+    assert browser.get('/api/admin/summary').status_code == 401
+    assert register(browser).status_code == 201
+    assert browser.get('/api/admin/summary').status_code == 403
+    with Session(engine) as db:
+        user = db.scalar(select(User))
+        user.role = 'Admin'
+        db.commit()
+    response = browser.get('/api/admin/summary')
+    assert response.status_code == 200
+    assert response.json()['activeUsers'] == 1
+    assert browser.get('/api/auth/me').json()['role'] == 'Admin'
+    assert browser.post('/api/auth/register', json={'name': 'Escalation', 'email': 'other@example.com', 'password': PASSWORD, 'role': 'Admin'}).status_code == 422
+
+
 @pytest.fixture
 def client():
     app.dependency_overrides.clear()
@@ -45,7 +61,8 @@ def test_register_login_logout_and_protected_routes(client):
     assert response.status_code == 201
     assert response.json()['name'] == 'Driver'
     assert response.json()['email'] == 'driver@example.com'
-    assert set(response.json()) == {'id', 'name', 'email'}
+    assert set(response.json()) == {'id', 'name', 'email', 'role'}
+    assert response.json()['role'] == 'Driver'
     assert 'HttpOnly' in response.headers['set-cookie']
     assert 'SameSite=lax' in response.headers['set-cookie']
     token = browser.cookies.get(auth.COOKIE)

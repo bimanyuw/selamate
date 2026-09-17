@@ -13,11 +13,11 @@ from sqlalchemy.orm import Session
 from selamate_ai.registry import get_status
 from .config import ROOT, settings
 from .database import get_session
-from .models import Alert
+from .models import Alert, User
 from .schemas import AlertResponse, AlertsResponse
 from .ai_routes import router as ai_router
 from .driver_routes import router as driver_router
-from .auth import router as auth_router, get_current_user
+from .auth import router as auth_router, get_current_user, admin_user
 
 app = FastAPI(title="Selamate EWS API", version="0.2.0")
 app.add_middleware(
@@ -74,3 +74,13 @@ def alerts(session: Annotated[Session, Depends(get_session)]):
 @app.get("/api/ai/status")
 def ai_status():
     return get_status()
+
+
+@app.get("/api/admin/summary")
+def admin_summary(session: Annotated[Session, Depends(get_session)], _user: Annotated[User, Depends(admin_user)]):
+    from sqlalchemy import func
+    try:
+        users = session.scalar(select(func.count()).select_from(User))
+    except SQLAlchemyError:
+        raise HTTPException(503, "Database belum tersedia")
+    return {"activeUsers": users, "systemStatus": "Operasional", "dataSource": settings.data_source.title()}

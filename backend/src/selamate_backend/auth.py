@@ -55,7 +55,7 @@ class RegisterRequest(LoginRequest):
 
 
 def public_user(user):
-    return {"id": user.id, "name": user.name, "email": user.email}
+    return {"id": user.id, "name": user.name, "email": user.email, "role": user.role}
 
 
 def _digest(token):
@@ -122,6 +122,12 @@ def get_current_user(request: Request, db: Database):
         raise _database_error(db) from exc
     if user is None:
         raise HTTPException(401, "Sesi berakhir. Silakan login kembali")
+    return user
+
+
+def admin_user(user: Annotated[User, Depends(get_current_user)]):
+    if user.role != "Admin":
+        raise HTTPException(403, "Akses khusus Admin")
     return user
 
 

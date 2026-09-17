@@ -1,5 +1,9 @@
 # Backend
 
+## Admin / Driver setelah penggabungan GitHub
+
+Endpoint `GET /api/admin/summary` dan panel Admin tetap tersedia. Akun registrasi selalu mendapat role Driver; role tidak bisa dipilih melalui API. Untuk memberi akses Admin, administrator database dapat menjalankan `UPDATE users SET role = 'Admin' WHERE email = 'alamat-akun-yang-dipercaya';` setelah akun dibuat. Terapkan migrasi `npm.cmd run db:migrate` sebelum menjalankan versi ini. Akun demo hardcoded dan backend Node lama digantikan oleh autentikasi PostgreSQL di aplikasi FastAPI yang sama. Login/me mengembalikan user langsung dengan id/name/email/role, tanpa wrapper tambahan.
+
 ## Register, login, logout
 
 Akun disimpan di PostgreSQL, termasuk ketika DATA_SOURCE=simulation. Jalankan `npm.cmd run db:migrate` untuk tabel users/auth_sessions. Endpoint: POST /api/auth/register (name/email/password), POST /api/auth/login (email/password), GET /api/auth/me, POST /api/auth/logout. Register langsung membuat sesi login. Password 8–128 karakter di-hash Argon2id; token sesi acak hanya disimpan sebagai hash di database. Cookie HttpOnly berlaku 7 hari secara default; logout mencabut token server-side. Registrasi dan login dibatasi per IP dalam proses backend.

@@ -21,6 +21,7 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(120))
     email: Mapped[str] = mapped_column(String(254), unique=True)
     password_hash: Mapped[str] = mapped_column(Text)
+    role: Mapped[str] = mapped_column(String(16), default="Driver", server_default="Driver")
 
 
 class AuthSession(Base):

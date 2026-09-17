@@ -2,7 +2,7 @@ import React, { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RefreshCw, ShieldCheck, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getAlerts, type AlertsResponse, type AuthUser } from '@/lib/api';
+import { getAlerts, getAdminSummary, type AdminSummary, type AlertsResponse, type AuthUser } from '@/lib/api';
 import DriverRisk from '@/components/driver-risk';
 import LiveDriver from '@/components/live-driver';
 import AuthShell from '@/components/auth-shell';
@@ -10,6 +10,22 @@ import './styles.css';
 
 const RiskMap = lazy(() => import('@/components/risk-map'));
 const RiskChart = lazy(() => import('@/components/risk-chart'));
+
+function AdminPanel() {
+  const [summary, setSummary] = useState<AdminSummary | null>(null);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    const controller = new AbortController();
+    getAdminSummary(controller.signal).then(setSummary).catch(err => {
+      if (!controller.signal.aborted) setError(err instanceof Error ? err.message : 'Gagal memuat ringkasan admin');
+    });
+    return () => controller.abort();
+  }, []);
+  return <section className="mt-5 rounded-2xl border border-border bg-surface p-6">
+    <h2 className="font-semibold">Panel Admin</h2>
+    {error ? <p role="alert">{error}</p> : summary ? <p className="mt-2 text-sm">Akun: {summary.activeUsers} · Status: {summary.systemStatus} · Sumber: {summary.dataSource}</p> : <p>Memuat ringkasan admin…</p>}
+  </section>;
+}
 
 function App({ user, logout, loggingOut, logoutError }: { user: AuthUser; logout: () => void; loggingOut: boolean; logoutError: string }) {
   const [data, setData] = useState<AlertsResponse | null>(null);
@@ -66,6 +82,7 @@ function App({ user, logout, loggingOut, logoutError }: { user: AuthUser; logout
       <p className="my-5 rounded-xl border border-warning/30 bg-warning-background px-4 py-3 text-xs leading-6 text-warning-foreground">
         {data ? (simulated ? 'Mode demonstrasi: halaman ini memuat data simulasi, bukan peringatan bencana aktual.' : 'Sumber: database. Informasi ditampilkan sesuai data yang tersimpan.') : 'Menunggu sumber data. Status peringatan belum tersedia.'}
       </p>
+      {user.role === 'Admin' && <AdminPanel />}
       <section className="grid gap-4 sm:grid-cols-3" aria-label="Ringkasan">
         {[['Wilayah', data ? regions.length : '—', 'Wilayah dalam data'], ['Peringatan', data ? alerts.length : '—', 'Seluruh tingkat risiko'], ['Prediksi AI', 'Belum aktif', 'Menunggu integrasi model']].map(([label, value, caption]) =>
           <article key={label} className="rounded-2xl border border-border bg-surface p-6"><p className="text-sm text-muted-foreground">{label}</p><strong className="my-3 block text-3xl font-medium">{value}</strong><span className="text-xs text-muted-foreground">{caption}</span></article>)}
