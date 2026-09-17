@@ -14,6 +14,8 @@ from selamate_backend.models import Alert
 def client(monkeypatch):
     monkeypatch.setattr(settings, "data_source", "simulation")
     with TestClient(app) as value:
+        response = value.post("/api/auth/login", json={"email": "driver@selamate.id", "password": "Driver123!"})
+        assert response.status_code == 200
         yield value
     app.dependency_overrides.clear()
 
@@ -33,6 +35,29 @@ def test_simulation_contract(client):
 
 def test_ai_has_no_active_predictions(client):
     assert client.get("/api/ai/status").json()["status"] == "not_implemented"
+
+
+def test_dummy_accounts_and_role_authorization(monkeypatch):
+    monkeypatch.setattr(settings, "data_source", "simulation")
+    with TestClient(app) as anon:
+        assert anon.get("/api/alerts").status_code == 401
+        assert anon.post("/api/auth/login", json={"email": "driver@selamate.id", "password": "salah"}).status_code == 401
+
+    with TestClient(app) as driver:
+        response = driver.post("/api/auth/login", json={"email": "driver@selamate.id", "password": "Driver123!"})
+        assert response.status_code == 200
+        assert response.json()["user"]["role"] == "Driver"
+        assert driver.get("/api/auth/me").status_code == 200
+        assert driver.get("/api/alerts").status_code == 200
+        assert driver.get("/api/admin/summary").status_code == 403
+
+    with TestClient(app) as admin:
+        response = admin.post("/api/auth/login", json={"email": "admin@selamate.id", "password": "Admin123!"})
+        assert response.status_code == 200
+        assert response.json()["user"]["role"] == "Admin"
+        assert admin.get("/api/admin/summary").status_code == 200
+        assert admin.post("/api/auth/logout").status_code == 200
+        assert admin.get("/api/auth/me").status_code == 401
 
 
 def test_database_mode_reads_persisted_rows(client, monkeypatch):

@@ -3,12 +3,12 @@ import { createRoot } from 'react-dom/client';
 import './styles.css';
 
 type Alert = { id: string; region: string; hazard: string; level: string; description: string };
-type User = { id: string; name: string; email: string; role: 'Admin' | 'User' };
+type User = { id: string; name: string; email: string; role: 'Admin' | 'Driver' };
 type AdminSummary = { activeUsers: number; systemStatus: string; dataSource: string };
 
 function Login({ onLogin }: { onLogin: (user: User) => void }) {
-  const [email, setEmail] = useState('user@selamate.id');
-  const [password, setPassword] = useState('User123!');
+  const [email, setEmail] = useState('driver@selamate.id');
+  const [password, setPassword] = useState('Driver123!');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   async function submit(event: FormEvent) {
@@ -16,7 +16,7 @@ function Login({ onLogin }: { onLogin: (user: User) => void }) {
     try {
       const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
+      if (!response.ok) throw new Error(data.detail || 'Login gagal');
       onLogin(data.user);
     } catch (err) { setError(err instanceof Error ? err.message : 'Login gagal'); }
     finally { setLoading(false); }
@@ -25,7 +25,7 @@ function Login({ onLogin }: { onLogin: (user: User) => void }) {
     <a className="brand" href="/">◈ selamate<span>EARLY WARNING SYSTEM</span></a>
     <p className="eyebrow">AKSES DASHBOARD</p><h1>Selamat datang.</h1><p>Masuk untuk melihat informasi kesiapsiagaan sesuai akses Anda.</p>
     <form onSubmit={submit}><label>Email<input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="username" /></label><label>Password<input type="password" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" /></label>{error && <p className="form-error" role="alert">{error}</p>}<button disabled={loading}>{loading ? 'Memeriksa…' : 'Masuk'}</button></form>
-    <div className="demo-credentials"><strong>Akun demo</strong><span>User: user@selamate.id / User123!</span><span>Admin: admin@selamate.id / Admin123!</span></div>
+    <div className="demo-credentials"><strong>Akun demo</strong><span>Driver: driver@selamate.id / Driver123!</span><span>Admin: admin@selamate.id / Admin123!</span></div>
   </section></main>;
 }
 

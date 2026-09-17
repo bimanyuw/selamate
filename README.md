@@ -35,10 +35,10 @@ npm test
 
 ## Akun demo dan role
 
-- `User`: `user@selamate.id` / `User123!` — dashboard dan data peringatan.
+- `Driver`: `driver@selamate.id` / `Driver123!` — dashboard dan data peringatan.
 - `Admin`: `admin@selamate.id` / `Admin123!` — akses tambahan ke ringkasan sistem.
 
-Kredensial dapat diganti melalui `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `USER_EMAIL`, dan `USER_PASSWORD`. Untuk deployment, wajib isi `SESSION_SECRET` dengan nilai acak yang kuat dan gunakan `NODE_ENV=production`. Akun masih berada di memori dan harus dipindahkan ke database sebelum penggunaan produksi.
+Kredensial dapat diganti melalui `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `DRIVER_EMAIL`, dan `DRIVER_PASSWORD`. Untuk deployment, wajib isi `SESSION_SECRET` dengan nilai acak yang kuat. Akun masih berada di memori dan harus dipindahkan ke database sebelum penggunaan produksi.
 
 Build menghasilkan `frontend/dist`. Untuk deployment, sediakan reverse proxy `/api` menuju backend; proxy Vite hanya berlaku saat development.
 
