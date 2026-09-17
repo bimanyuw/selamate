@@ -1,84 +1,63 @@
 # Selamate — Early Warning System
 
-Fondasi EWS untuk pengembangan. Data bawaan adalah simulasi; model prediksi belum aktif.
+Setup awal EWS dengan lima bagian terpisah. Dashboard menggunakan **data simulasi**, bukan data bencana aktual. Autentikasi demo dan pembatasan akses berbasis role sudah tersedia; database, sumber sensor, dan model prediksi belum aktif.
 
-| Folder | Stack / fungsi |
-| --- | --- |
-| frontend | React, TypeScript, Vite, Tailwind CSS, fondasi shadcn/ui, Leaflet, Recharts |
-| backend | FastAPI, SQLAlchemy, Alembic, psycopg |
-| ai | pandas, scikit-learn, joblib (PyArrow opsional) |
-| data | Data mentah, hasil olahan, dan sampel JSON |
-| models | Artefak model terlatih dan registry |
-
-## Instalasi
-
-Prasyarat: Node.js 22.12+, Python 3.11+, dan Docker Desktop jika memakai database lokal.
-Jalankan dari root proyek (PowerShell):
-
-```powershell
-npm.cmd install
-python -m venv .venv
-.venv\Scripts\python.exe -m pip install -e './backend[dev]' -e ./ai
-Copy-Item .env.example .env
+```text
+selamate/
+├── frontend/   # React + TypeScript + Vite
+├── backend/    # HTTP API Node.js
+├── ai/         # Package Python untuk pengembangan pipeline AI
+├── data/       # Data mentah, hasil pengolahan, dan contoh
+└── models/     # Registry dan artefak model terlatih
 ```
 
-Jangan menimpa .env yang sudah dikustomisasi. Di Linux/macOS gunakan npm dan .venv/bin/python.
-requirements.lock.txt menyimpan versi Python hasil instalasi; untuk mereproduksi gunakan pip install -r requirements.lock.txt sebelum install editable kedua package.
+## Menjalankan website
 
-## Menjalankan demo
+Prasyarat: Node.js 22.12+ dan npm. Jalankan dari root proyek:
 
-Terminal pertama:
-
-```powershell
-npm.cmd run dev:backend
+```sh
+npm install
+npm run dev:backend
 ```
 
-Terminal kedua:
+Di terminal kedua:
 
-```powershell
-npm.cmd run dev:frontend
+```sh
+npm run dev:frontend
 ```
 
-- Website: http://localhost:5173 (atau port yang ditampilkan Vite).
-- API dan dokumentasi interaktif: http://127.0.0.1:3001/docs.
-- Frontend menggunakan proxy /api ke port 3001.
-- Mode DATA_SOURCE=simulation tidak membutuhkan PostgreSQL.
-- Dashboard memuat peta, grafik jumlah peringatan, filter wilayah, dan pembaruan setiap 30 detik.
-- Peta dasar OpenStreetMap membutuhkan internet. Koordinat demo adalah perkiraan lokasi kota.
-- Untuk deployment, siapkan reverse proxy /api; proxy Vite hanya untuk development.
+Buka alamat yang ditampilkan Vite (biasanya http://localhost:5173). Frontend meneruskan `/api` ke backend pada http://127.0.0.1:3001. Di PowerShell yang memblokir `npm.ps1`, gunakan `npm.cmd` sebagai pengganti `npm`.
 
-## PostgreSQL lokal
-
-Pastikan Docker Desktop berjalan, lalu:
-
-```powershell
-docker compose up -d db
-npm.cmd run db:migrate
-npm.cmd run db:seed
+```sh
+npm run build
+npm test
 ```
 
-Ubah DATA_SOURCE=database pada .env dan restart backend untuk membaca database.
-Seed dapat dijalankan ulang tanpa menimpa record yang ada; record contoh tetap diberi label simulasi.
-DATABASE_URL harus sesuai POSTGRES_USER, POSTGRES_PASSWORD, dan POSTGRES_DB.
-Kredensial bawaan khusus lokal; port database hanya diekspos ke 127.0.0.1.
-Data tersimpan di volume selamate_postgres. Hentikan container dengan docker compose stop.
-PostGIS belum diperlukan untuk titik lokasi sederhana dan belum dipasang.
+## Akun demo dan role
 
-## Pemeriksaan
+- `User`: `user@selamate.id` / `User123!` — dashboard dan data peringatan.
+- `Admin`: `admin@selamate.id` / `Admin123!` — akses tambahan ke ringkasan sistem.
 
-```powershell
-npm.cmd run build
-npm.cmd test
-.venv\Scripts\python.exe -m selamate_ai
+Kredensial dapat diganti melalui `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `USER_EMAIL`, dan `USER_PASSWORD`. Untuk deployment, wajib isi `SESSION_SECRET` dengan nilai acak yang kuat dan gunakan `NODE_ENV=production`. Akun masih berada di memori dan harus dipindahkan ke database sebelum penggunaan produksi.
+
+Build menghasilkan `frontend/dist`. Untuk deployment, sediakan reverse proxy `/api` menuju backend; proxy Vite hanya berlaku saat development.
+
+## Fondasi AI
+
+Prasyarat: Python 3.10+. Pemeriksaan registry tanpa dependensi tambahan:
+
+```sh
+python ai/src/selamate_ai/__main__.py
 ```
 
-Tes database otomatis menggunakan SQLite terisolasi untuk logika query; PostgreSQL lokal diperiksa terpisah melalui migrasi dan /api/health/database.
+Untuk pengembangan package, buat virtual environment dan install editable:
 
-## API
+```sh
+python -m venv ai/.venv
+ai/.venv/Scripts/python -m pip install -e ./ai
+ai/.venv/Scripts/python -m selamate_ai
+```
 
-- GET /api/health — status API, bukan jaminan koneksi database.
-- GET /api/health/database — pemeriksaan koneksi database (503 jika tidak tersedia).
-- GET /api/alerts — data simulasi atau record database sesuai konfigurasi.
-- GET /api/ai/status — status registry; inference belum diimplementasikan.
+Perintah environment di atas untuk Windows. Pada Linux/macOS, gunakan `ai/.venv/bin/python`.
 
-Backend mengimpor package ai langsung. Belum ada layanan inference terpisah, autentikasi, ingestion sensor, training, atau pengiriman notifikasi.
+Alur saat ini: `frontend → backend → data/samples`. Integrasi yang akan dikembangkan: pemrosesan dataset di `ai`, artefak di `models`, lalu inference melalui backend.

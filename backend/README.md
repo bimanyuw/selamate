@@ -1,12 +1,12 @@
 # Backend
 
-Backend Node.js awal telah diganti FastAPI. Package: src/selamate_backend.
-Install backend dan ai di .venv root; jalankan npm.cmd run dev:backend dari root.
-Dokumentasi: http://127.0.0.1:3001/docs.
+HTTP API Node.js tanpa dependency runtime tambahan. Jalankan `npm run dev:backend` dari root. Port default 3001; bisa diubah melalui environment variable `PORT` (sesuaikan juga proxy frontend).
 
-SQLAlchemy memakai PostgreSQL melalui psycopg; migrasi di migrations/.
-npm.cmd run db:migrate menerapkan migrasi, npm.cmd run db:seed menambahkan contoh secara idempotent.
-Konfigurasi dibaca dari .env root. DATA_SOURCE=simulation tidak membuka koneksi database saat mengambil peringatan.
-DATA_SOURCE=database mengembalikan 503 ketika database tidak siap, tanpa mengganti sumber secara diam-diam.
+- `GET /api/health`: status layanan.
+- `POST /api/auth/login`: membuat sesi dari email dan password.
+- `POST /api/auth/logout`: menghapus sesi.
+- `GET /api/auth/me`: pengguna yang sedang login.
+- `GET /api/alerts`: data simulasi untuk User dan Admin.
+- `GET /api/admin/summary`: ringkasan khusus Admin.
 
-Lihat README root untuk instalasi, endpoint, dan pengujian.
+API hanya bind ke localhost untuk pengembangan. Sesi ditandatangani dan disimpan dalam cookie HttpOnly. `npm test` memeriksa autentikasi, otorisasi role, dan endpoint dasar. Belum ada koneksi database atau layanan AI.
