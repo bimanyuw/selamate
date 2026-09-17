@@ -6,7 +6,14 @@ import 'leaflet/dist/leaflet.css';
 function Bounds({ alerts }: { alerts: Alert[] }) {
   const map = useMap();
   useEffect(() => {
-    if (alerts.length) map.fitBounds(alerts.map(a => [a.latitude, a.longitude]), { padding: [40, 40], maxZoom: 10 });
+    const resize = () => {
+      map.invalidateSize({ pan: false });
+      if (alerts.length && map.getContainer().clientWidth) map.fitBounds(alerts.map(a => [a.latitude, a.longitude]), { padding: [40, 40], maxZoom: 10 });
+    };
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(map.getContainer());
+    return () => observer.disconnect();
   }, [alerts, map]);
   return null;
 }

@@ -1,9 +1,10 @@
 """Real YOLO eye inference and timestamp-based fatigue analysis."""
 from pathlib import Path
+import os
 from threading import Lock
 from .behavior import _number
 
-MODEL_PATH = Path(__file__).resolve().parents[3] / "models" / "eye_detector.pt"
+MODEL_PATH = Path(os.environ.get("EYE_MODEL_PATH", str(Path(__file__).resolve().parents[3] / "models" / "eye_detector.pt")))
 EYE_STATES = frozenset({"OPEN", "CLOSED", "UNKNOWN"})
 _model = None
 _model_lock = Lock()

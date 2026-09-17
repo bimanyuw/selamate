@@ -1,5 +1,15 @@
 # Frontend
 
+## Monitoring dashboard
+
+Dashboard EWS menampilkan data kendaraan, risiko gabungan, peta GPS sesi, kondisi lingkungan, kamera dan indikator pengemudi, lalu Operator Actions. Mulai kamera/GPS atau pantau ID sesi melalui Operator Actions; tombol di bagian atas mengarah langsung ke kontrol tersebut. Upload video tetap ada pada panel Analisis risiko pengemudi. Peringatan wilayah, filter, peta dan grafik tersedia pada panel Peringatan & potensi risiko wilayah.
+
+`LiveDriver` tetap memiliki lifecycle kamera/GPS/BLE dan pemanggilan API yang sama; `monitoring-dashboard.tsx` menyusun slot kontrol dan snapshot menjadi panel. `live-map.tsx` menampilkan koordinat sebenarnya dan maksimal 250 titik jejak selama pemantauan pada browser, bukan rute rencana atau histori perjalanan tersimpan. Peta wilayah simulasi tetap terpisah dari peta kendaraan. Label Armada Aktif hanya menghitung sesi yang sedang dipantau (0 atau 1), bukan jumlah seluruh pengguna.
+
+UI menandai pembacaan yang lebih dari 5 detik sebagai terlambat. Timestamp kartu adalah perkiraan waktu penerimaan dari usia telemetri, bukan timestamp sensor. Metrik yang belum dikirim API (akselerasi, lateral, durasi, jarak, engine load, throttle, fuel, check engine, blink rate, yawn, head pose) ditandai belum tersedia. Notifikasi/perintah operator dinonaktifkan karena belum ada endpoint. Preview kamera ditampilkan hanya pada perangkat yang memulai sesi; operator di perangkat lain menerima hasil deteksi, bukan video.
+
+Pemeriksaan UI menggunakan fixture browser terisolasi (tanpa menulis database): desktop 1440, tablet 768, HP 390; state kosong, telemetri aktif, data terlambat, error, serta start/stop/logout dengan kamera dan GPS simulasi browser. Validasi dengan perangkat OBD dan kamera sebenarnya tetap dilakukan saat demo.
+
 Halaman `/login` dan `/register` mengikuti palet yang sama. Dashboard membutuhkan sesi login; logout tersedia di header. Cookie HttpOnly dikirim melalui fetch credentials=include, tanpa token/password di localStorage. Sesi dipulihkan lewat /api/auth/me saat refresh. Backend harus memiliki PostgreSQL dan migrasi akun meskipun alerts memakai simulation. Hosting production harus menyediakan SPA fallback ke index.html untuk /login dan /register, setelah aturan proxy /api.
 
 Mode pengemudi kamera/GPS/OBD BLE dan monitoring sesi: lihat [REALTIME.md](REALTIME.md).
