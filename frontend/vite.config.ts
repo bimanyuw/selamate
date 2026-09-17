@@ -6,9 +6,13 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, fileURLToPath(new URL('.', import.meta.url)), '');
   const allowedHosts = (process.env.FRONTEND_ALLOWED_HOSTS || env.FRONTEND_ALLOWED_HOSTS || '').split(',').map(host => host.trim()).filter(Boolean);
+  const backendTarget = process.env.BACKEND_PROXY_TARGET || env.BACKEND_PROXY_TARGET || 'http://127.0.0.1:3001';
   return {
   plugins: [react(), tailwindcss()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
-  server: { allowedHosts, proxy: { '/api': 'http://127.0.0.1:3001' } },
+  server: {
+    allowedHosts,
+    proxy: { '/api': { target: backendTarget, changeOrigin: true } },
+  },
   };
 });
