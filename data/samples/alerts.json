@@ -1,0 +1,5 @@
+[
+  { "id": "demo-001", "region": "Jakarta", "hazard": "Potensi banjir", "level": "Siaga", "description": "Contoh skenario kenaikan muka air untuk pengembangan antarmuka." },
+  { "id": "demo-002", "region": "Bogor", "hazard": "Potensi hujan lebat", "level": "Waspada", "description": "Contoh skenario intensitas hujan tinggi. Bukan pengamatan aktual." },
+  { "id": "demo-003", "region": "Bandung", "hazard": "Potensi tanah longsor", "level": "Waspada", "description": "Contoh skenario risiko lereng. Bukan hasil prediksi maupun peringatan resmi." }
+]
