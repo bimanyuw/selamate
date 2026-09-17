@@ -1,5 +1,10 @@
 # Frontend
 
-React + TypeScript + Vite. Entry point: `src/main.tsx`. Dashboard menampilkan data simulasi, filter wilayah, detail peringatan, serta status koneksi API.
+React + TypeScript + Vite, Tailwind melalui plugin Vite. Alias @/ mengarah ke src/.
+components.json dan src/components/ui/button.tsx menyiapkan pola shadcn/ui; komponen dimiliki dan dapat diedit di proyek.
 
-Jalankan `npm run dev:frontend` dari root. Konfigurasi proxy backend ada di `vite.config.ts`.
+Dashboard memakai komponen Button, peta react-leaflet, dan grafik Recharts. Peta serta grafik dimuat lazy.
+Polling API setiap 30 detik, tombol refresh, filter wilayah, dan kondisi error tersedia.
+Tidak ada API key untuk peta dasar OpenStreetMap; penggunaan produksi perlu menyesuaikan layanan tile.
+
+Dari root: npm.cmd run dev:frontend atau npm.cmd run build.

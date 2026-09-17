@@ -4,10 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "selamate-ai"
-version = "0.1.0"
-description = "Fondasi pipeline AI untuk Selamate EWS"
-requires-python = ">=3.10"
-dependencies = []
+version = "0.2.0"
+description = "Pipeline AI untuk Selamate EWS"
+requires-python = ">=3.11"
+dependencies = ["pandas>=2.2,<3", "scikit-learn>=1.6,<2", "joblib>=1.4,<2"]
+
+[project.optional-dependencies]
+parquet = ["pyarrow>=19,<24"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

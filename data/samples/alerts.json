@@ -1,5 +1,32 @@
 [
-  { "id": "demo-001", "region": "Jakarta", "hazard": "Potensi banjir", "level": "Siaga", "description": "Contoh skenario kenaikan muka air untuk pengembangan antarmuka." },
-  { "id": "demo-002", "region": "Bogor", "hazard": "Potensi hujan lebat", "level": "Waspada", "description": "Contoh skenario intensitas hujan tinggi. Bukan pengamatan aktual." },
-  { "id": "demo-003", "region": "Bandung", "hazard": "Potensi tanah longsor", "level": "Waspada", "description": "Contoh skenario risiko lereng. Bukan hasil prediksi maupun peringatan resmi." }
+  {
+    "id": "demo-001",
+    "region": "Jakarta",
+    "hazard": "Potensi banjir",
+    "level": "Siaga",
+    "description": "Contoh skenario kenaikan muka air untuk pengembangan antarmuka.",
+    "latitude": -6.2088,
+    "longitude": 106.8456,
+    "is_simulation": true
+  },
+  {
+    "id": "demo-002",
+    "region": "Bogor",
+    "hazard": "Potensi hujan lebat",
+    "level": "Waspada",
+    "description": "Contoh skenario intensitas hujan tinggi. Bukan pengamatan aktual.",
+    "latitude": -6.5971,
+    "longitude": 106.806,
+    "is_simulation": true
+  },
+  {
+    "id": "demo-003",
+    "region": "Bandung",
+    "hazard": "Potensi tanah longsor",
+    "level": "Waspada",
+    "description": "Contoh skenario risiko lereng. Bukan hasil prediksi maupun peringatan resmi.",
+    "latitude": -6.9175,
+    "longitude": 107.6191,
+    "is_simulation": true
+  }
 ]

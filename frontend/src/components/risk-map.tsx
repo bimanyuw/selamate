@@ -1,0 +1,22 @@
+import { useEffect } from 'react';
+import { CircleMarker, MapContainer, Popup, TileLayer, useMap } from 'react-leaflet';
+import type { Alert } from '@/lib/api';
+import 'leaflet/dist/leaflet.css';
+
+function Bounds({ alerts }: { alerts: Alert[] }) {
+  const map = useMap();
+  useEffect(() => {
+    if (alerts.length) map.fitBounds(alerts.map(a => [a.latitude, a.longitude]), { padding: [40, 40], maxZoom: 10 });
+  }, [alerts, map]);
+  return null;
+}
+
+export default function RiskMap({ alerts }: { alerts: Alert[] }) {
+  return <MapContainer center={[-6.6, 107]} zoom={8} scrollWheelZoom={false} className="h-80 w-full rounded-xl" aria-label="Peta lokasi peringatan">
+    <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
+    <Bounds alerts={alerts} />
+    {alerts.map(alert => <CircleMarker key={alert.id} center={[alert.latitude, alert.longitude]} radius={11} pathOptions={{ color: alert.level === 'Awas' ? '#b91c1c' : '#a16207', fillOpacity: 0.65 }}>
+      <Popup><strong>{alert.region}</strong><br />{alert.hazard} · {alert.level}<br />{alert.is_simulation ? 'Data simulasi' : 'Data pengamatan'}</Popup>
+    </CircleMarker>)}
+  </MapContainer>;
+}

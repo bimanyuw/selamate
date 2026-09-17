@@ -1,13 +1,19 @@
 {
   "name": "selamate",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "workspaces": ["frontend", "backend"],
+  "workspaces": [
+    "frontend"
+  ],
   "scripts": {
     "dev:frontend": "npm run dev --workspace frontend",
-    "dev:backend": "npm run dev --workspace backend",
+    "dev:backend": "node scripts/backend.mjs dev",
+    "db:migrate": "node scripts/backend.mjs migrate",
+    "db:seed": "node scripts/backend.mjs seed",
     "build": "npm run build --workspace frontend",
-    "test": "npm test --workspace backend"
+    "test": "node scripts/backend.mjs test"
   },
-  "engines": { "node": ">=22.12.0" }
+  "engines": {
+    "node": ">=22.12.0"
+  }
 }

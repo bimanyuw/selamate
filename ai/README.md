@@ -1,7 +1,7 @@
 # AI
 
-Simpan kode preprocessing, training, evaluasi, dan inference di package `src/selamate_ai`. Folder ini terpisah dari dataset dan artefak model.
+Package selamate_ai untuk pengembangan preprocessing, training, evaluasi, dan inference.
+Dependensi inti: pandas, scikit-learn, joblib. Dukungan Parquet opsional: pip install -e "./ai[parquet]". Dataset di ../data, artefak di ../models.
 
-Saat ini entry point hanya membaca `../models/registry.json` dan melaporkan status scaffold. Belum ada algoritma maupun prediksi aktif.
-
-Jalankan dari root: `python ai/src/selamate_ai/__main__.py`.
+Backend memanggil registry melalui import Python. Belum ada prediksi atau training aktif.
+Dari root setelah install editable: .venv\Scripts\python.exe -m selamate_ai.
