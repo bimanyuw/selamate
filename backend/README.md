@@ -10,3 +10,29 @@ Konfigurasi dibaca dari .env root. DATA_SOURCE=simulation tidak membuka koneksi 
 DATA_SOURCE=database mengembalikan 503 ketika database tidak siap, tanpa mengganti sumber secara diam-diam.
 
 Lihat README root untuk instalasi, endpoint, dan pengujian.
+
+## AI endpoints
+
+The existing FastAPI app owns every route. Canonical paths follow the `/api` convention; unprefixed aliases `/health`, `/behavior`, `/environment`, `/fatigue`, and `/risk` are also accepted (hidden from OpenAPI).
+
+| Method | Path | AI function |
+| --- | --- | --- |
+| GET | /api/health | Existing backend health handler |
+| POST | /api/behavior | selamate_ai.behavior.score_behavior |
+| POST | /api/environment | selamate_ai.environment.score_environment |
+| POST | /api/fatigue | selamate_ai.fatigue.analyze_video |
+| POST | /api/risk | selamate_ai.fusion.fuse_risk |
+
+Behavior JSON fields: speed, speed_limit (>0), harsh_braking, harsh_acceleration, sharp_turns. Event fields accept nonnegative integer counts or booleans and default to zero. Speeds must share a unit; event counts must cover a consistent observation window.
+
+Environment JSON fields: rainfall (mm/h), visibility (metres), road_condition (dry/wet/damaged/flooded/icy), slope (signed degrees), disaster_risk (0–100).
+
+Risk JSON fields: fatigue_score, behavior_score, environment_score, each finite and within 0–100. Unknown fields are rejected. Fatigue INSUFFICIENT_DATA must be handled by callers before fusion; null scores are rejected.
+
+Fatigue expects multipart/form-data with video field `file`. MP4, AVI, MOV, WebM, MKV, M4V extensions are accepted, subject to OpenCV codec availability. Files are copied in chunks to a uniquely named temporary directory and removed after success or failure. Processing is synchronous in FastAPI's worker thread pool. Duration defaults to 300 seconds and upload size to 100 MiB; configure FATIGUE_MAX_VIDEO_SECONDS and FATIGUE_MAX_UPLOAD_BYTES. Upload limits are enforced during the route's copy; configure ingress/reverse-proxy body limits as well because multipart parsing occurs before the route.
+
+Video decoding calls real YOLO on every frame, then timestamp-based fatigue analysis. Timing uses nominal video FPS; use constant-frame-rate videos for reliable temporal measurements. There is no prediction simulation fallback. Upload validation/decode errors return 422; oversize uploads 413; missing dependencies/weights or incompatible model classes 503; unexpected processing failures 500 with server-side logging. No per-driver window is shared between uploads.
+
+Install backend with `pip install -e ./backend`; for video inference additionally use `pip install -e "./ai[vision]"` and provision root `models/eye_detector.pt` separately from GitHub. The inference extras remain optional and are not included in the base requirements lock.
+
+Existing frontend requests remain relative to `/api`. CORS_ORIGINS defaults to `[]` for same-origin proxy use; for cross-origin deployment supply a JSON array of explicit frontend origins through environment settings. No Cloudeka URL is embedded in routes. The registry endpoint remains the legacy trained-model registry status, separate from scoring-route availability.

@@ -10,7 +10,7 @@ export default function RiskChart({ alerts }: { alerts: Alert[] }) {
         <XAxis dataKey="level" fontSize={12} />
         <YAxis allowDecimals={false} fontSize={12} />
         <Tooltip />
-        <Bar dataKey="jumlah" name="Jumlah peringatan" fill="#276556" radius={[6, 6, 0, 0]} />
+        <Bar dataKey="jumlah" name="Jumlah peringatan" fill="var(--secondary)" stroke="var(--primary)" radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer></div>
     <p className="text-xs text-muted-foreground">{data.map(d => d.level + ': ' + d.jumlah).join(' · ')}</p>

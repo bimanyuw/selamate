@@ -1,1 +1,1 @@
-"""Pipeline AI Selamate. Model prediksi belum diintegrasikan."""
+"""Selamate AI inference and rule-based risk scoring."""

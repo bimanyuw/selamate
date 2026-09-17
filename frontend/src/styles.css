@@ -4,6 +4,11 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-surface: var(--surface);
+  --color-warning: var(--warning);
+  --color-warning-background: var(--warning-background);
+  --color-warning-foreground: var(--warning-foreground);
   --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--foreground);
@@ -17,14 +22,19 @@
 :root {
   font-family: Inter, system-ui, sans-serif;
   font-synthesis: none;
-  --background: #f5f7f5;
-  --foreground: #193a35;
-  --primary: #174b40;
-  --primary-foreground: #ffffff;
-  --accent: #e3eee6;
-  --muted: #edf1ee;
-  --muted-foreground: #5d7165;
-  --border: #d9e3dc;
+  --background: #fff7e9;
+  --foreground: #17315b;
+  --primary: #1746a2;
+  --secondary: #5f9df7;
+  --surface: #fffaf2;
+  --warning: #fd5f00;
+  --warning-background: #fff0df;
+  --warning-foreground: #963700;
+  --primary-foreground: #fff7e9;
+  --accent: #e2edff;
+  --muted: #edf3ff;
+  --muted-foreground: #506582;
+  --border: #c9d9ef;
 }
 
 @layer base {

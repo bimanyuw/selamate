@@ -15,3 +15,7 @@ data/processed/*
 models/artifacts/*
 !models/artifacts/.gitkeep
 .tmp/
+
+models/**/*.pt
+models/**/*.pth
+models/**/*.onnx

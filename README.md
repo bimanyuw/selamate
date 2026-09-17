@@ -79,6 +79,12 @@ Tes database otomatis menggunakan SQLite terisolasi untuk logika query; PostgreS
 - GET /api/health — status API, bukan jaminan koneksi database.
 - GET /api/health/database — pemeriksaan koneksi database (503 jika tidak tersedia).
 - GET /api/alerts — data simulasi atau record database sesuai konfigurasi.
-- GET /api/ai/status — status registry; inference belum diimplementasikan.
+- GET /api/ai/status — status registry model lama; terpisah dari ketersediaan endpoint scoring.
+
+- POST /api/behavior — scoring perilaku mengemudi.
+- POST /api/environment — scoring risiko lingkungan.
+- POST /api/fatigue — upload video multipart field file; memerlukan ai[vision] dan models/eye_detector.pt.
+- POST /api/risk — fusion tiga score 0–100.
+- Alias tanpa /api juga tersedia untuk health dan keempat endpoint AI.
 
 Backend mengimpor package ai langsung. Belum ada layanan inference terpisah, autentikasi, ingestion sensor, training, atau pengiriman notifikasi.
