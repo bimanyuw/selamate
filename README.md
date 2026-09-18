@@ -69,10 +69,12 @@ Pastikan Docker Desktop berjalan, lalu:
 docker compose up -d db
 npm.cmd run db:migrate
 npm.cmd run db:seed
+npm.cmd run demo:accounts
 ```
 
 Ubah DATA_SOURCE=database pada .env dan restart backend untuk membaca database.
 Seed dapat dijalankan ulang tanpa menimpa record yang ada; record contoh tetap diberi label simulasi.
+`demo:accounts` membuat atau memperbaiki akun Admin dan Driver agar kredensialnya sama dengan yang ditampilkan di halaman login.
 DATABASE_URL harus sesuai POSTGRES_USER, POSTGRES_PASSWORD, dan POSTGRES_DB.
 Kredensial bawaan khusus lokal; port database hanya diekspos ke 127.0.0.1.
 Data tersimpan di volume selamate_postgres. Hentikan container dengan docker compose stop.
