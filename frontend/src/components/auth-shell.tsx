@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import DemoAccounts from './demo-accounts';
 import { Button } from '@/components/ui/button';
 import { ApiError, getCurrentUser, loginUser, logoutUser, registerUser, type AuthUser } from '@/lib/api';
 
@@ -78,6 +79,7 @@ export default function AuthShell({ children }: Props) {
         </form>
         {error && <p className="mt-4 rounded-lg border border-warning/30 bg-warning-background p-3 text-sm text-warning-foreground" role="alert">{error}</p>}
         <p className="auth-switch">{registering ? 'Sudah punya akun? ' : 'Belum punya akun? '}<a href={registering ? '/login' : '/register'} onClick={event => { event.preventDefault(); if (!busy) navigate(registering ? '/login' : '/register'); }}>{registering ? 'Login' : 'Daftar sekarang'}</a></p>
+        <DemoAccounts />
       </section>
     </main><footer className="auth-footer"><span>© {new Date().getFullYear()} SelaMate</span><a href="https://commons.wikimedia.org/wiki/File:Blank_map_of_the_world.svg" target="_blank" rel="noreferrer">Peta: Wikimedia Commons · CC0</a></footer>
   </div>;

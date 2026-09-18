@@ -1,0 +1,14 @@
+.auth-demo-accounts { margin-top: 24px; border: 1px solid #fed4b6; border-radius: 14px; padding: 16px; background: #fffaf5; }
+.auth-demo-accounts h3 { margin: 0; color: #17315b; font-size: 15px; font-weight: 750; }
+.auth-demo-accounts header p { margin: 5px 0 14px; color: #65758b; font-size: 12px; line-height: 1.6; }
+.auth-demo-accounts > div { display: grid; gap: 10px; }
+.auth-demo-accounts article { border: 1px solid #e7ebf2; border-radius: 10px; background: white; padding: 12px; min-width: 0; }
+.auth-demo-role { display: flex; gap: 8px; align-items: center; color: #1746a2; }
+.auth-demo-role > span { display: grid; gap: 2px; }
+.auth-demo-role strong { font-size: 13px; }
+.auth-demo-role small { color: #65758b; font-size: 11px; }
+.auth-demo-accounts article:last-child .auth-demo-role { color: #e77617; }
+.auth-demo-accounts dl { display: grid; gap: 6px; margin: 12px 0 0; }
+.auth-demo-accounts dl > div { display: grid; gap: 3px; }
+.auth-demo-accounts dt { font-size: 10px; color: #65758b; }
+.auth-demo-accounts dd { margin: 0; font-size: 12px; color: #17315b; overflow-wrap: anywhere; user-select: all; }
