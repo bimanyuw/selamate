@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNod
 import { Button } from '@/components/ui/button';
 import { ApiError, createDriverSession, getDriverSession, sendDriverCamera, sendDriverFrame, sendDriverTelemetry, stopDriverSession, type DriverSnapshot, type EnvironmentInput } from '@/lib/api';
 import { ObdBle, type ObdReading } from '@/lib/obd-ble';
+import { demoEnvironment } from '@/lib/demo-environment';
 
 const inputClass = 'mt-1 block h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm';
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : 'Permintaan gagal.';
@@ -33,6 +34,7 @@ export type LiveDriverView = {
   camera: ReactNode;
   configuration: ReactNode;
   obdControls: ReactNode;
+  drivingControls: ReactNode;
   monitorControls: ReactNode;
 };
 
@@ -62,6 +64,8 @@ export default function LiveDriver({ children }: { children: (view: LiveDriverVi
   const startLock = useRef(false);
   const watch = useRef<number | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const settings = useRef<Configuration>({ limit: 60, braking: 0, acceleration: 0, turns: 0, environment: demoEnvironment });
+  const [settingsStatus, setSettingsStatus] = useState('');
 
   const attachVideo = useCallback((node: HTMLVideoElement | null) => {
     video.current = node;
@@ -120,6 +124,7 @@ export default function LiveDriver({ children }: { children: (view: LiveDriverVi
     if (sessionRef.current || startLock.current || monitoring) return;
     if (!window.isSecureContext) { setError('Kamera HP membutuhkan alamat HTTPS. Buka link HTTPS dari launcher HP, bukan alamat IP dengan http://.'); return; }
     if (!navigator.mediaDevices?.getUserMedia) { setError('Browser ini tidak menyediakan akses kamera. Buka halaman langsung di Chrome atau Safari.'); return; }
+    if (config) settings.current = config;
     startLock.current = true;
     setStarting(true); setError(''); setSnapshot(null);
     const active = new AbortController(); controller.current = active;
@@ -168,6 +173,7 @@ export default function LiveDriver({ children }: { children: (view: LiveDriverVi
       } catch { setGpsStatus('GPS tidak tersedia; kamera tetap aktif.'); }
       const telemetry = async () => {
         try {
+          const config = settings.current;
           const now = performance.now();
           const location = gps.current && now - gps.current.received <= 10000 ? gps.current.position.coords : null;
           const reading = obd.current && now - obd.current.received <= 5000 ? obd.current : null;
@@ -266,6 +272,13 @@ export default function LiveDriver({ children }: { children: (view: LiveDriverVi
         <Button className="mt-2" variant="outline" onClick={() => { adapter.current?.disconnect(); adapter.current = null; obd.current = null; setBleStatus('OBD terputus'); }}>Putuskan OBD</Button>
       </details>
   );
+  const drivingControls = <form className="driver-driving-settings" onSubmit={event => {
+    event.preventDefault();
+    const limit = Number(new FormData(event.currentTarget).get('speed-limit'));
+    if (!Number.isFinite(limit) || limit <= 0) return;
+    settings.current = { ...settings.current, limit };
+    setSettingsStatus(`Batas kecepatan tersimpan: ${limit} km/jam`);
+  }}><label>Batas kecepatan (km/jam)<input className={inputClass} name="speed-limit" type="number" min="1" max="200" defaultValue={settings.current.limit} required /></label><Button type="submit" variant="outline">Simpan konfigurasi</Button><p role="status">{settingsStatus}</p></form>;
   const monitorControls = (
 !session && !starting && <div className="mt-5"><label className="text-xs">Pantau sesi dari perangkat lain<input className={inputClass} value={monitorId} onChange={event => setMonitorId(event.target.value)} disabled={monitoring} placeholder="ID sesi pengemudi" /></label><Button className="mt-2" variant="outline" disabled={!monitorId.trim() || monitoring} onClick={() => monitor()}>Pantau sesi</Button></div>
   );
@@ -275,6 +288,6 @@ export default function LiveDriver({ children }: { children: (view: LiveDriverVi
     cameraActive, playbackBlocked, playCamera: () => void playCamera(),
     cameraStatus, gpsStatus, bleStatus, stop, startCamera: () => void begin(), monitorSession: monitor,
     camera: <video ref={attachVideo} autoPlay muted playsInline onPlaying={() => setPlaybackBlocked(false)} className="driver-video" aria-label="Preview kamera pengemudi" />,
-    configuration, obdControls, monitorControls,
+    configuration, obdControls, drivingControls, monitorControls,
   });
 }

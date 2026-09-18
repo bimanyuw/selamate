@@ -2,6 +2,7 @@ export class DriverRingtone {
   private context: AudioContext | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
   private oscillators = new Set<OscillatorNode>();
+  private chimes = new Set<OscillatorNode>();
 
   constructor(private onReady: (ready: boolean) => void) {}
 
@@ -16,7 +17,7 @@ export class DriverRingtone {
     const ready = this.context.state === 'running';
     this.onReady(ready);
     if (!ready) throw new Error('Geser kontrol suara untuk mengizinkan alarm.');
-    this.burst();
+    this.chime();
   }
 
   private tone(delay: number, duration: number) {
@@ -51,6 +52,23 @@ export class DriverRingtone {
     this.vibrate([320, 120, 320, 120, 480]);
   }
 
+  chime(delay = 0) {
+    const context = this.context;
+    if (!context || context.state !== 'running') return false;
+    const start = context.currentTime + delay;
+    for (const [frequency, amplitude] of [[1568, .18], [2093, .07]]) {
+      const oscillator = context.createOscillator(), gain = context.createGain();
+      oscillator.type = 'sine'; oscillator.frequency.value = frequency;
+      gain.gain.setValueAtTime(amplitude, start);
+      gain.gain.exponentialRampToValueAtTime(.001, start + .55);
+      oscillator.connect(gain); gain.connect(context.destination);
+      this.chimes.add(oscillator);
+      oscillator.onended = () => { this.chimes.delete(oscillator); oscillator.disconnect(); gain.disconnect(); };
+      oscillator.start(start); oscillator.stop(start + .6);
+    }
+    return true;
+  }
+
   ring() {
     this.stop();
     if (this.context?.state !== 'running') return false;
@@ -69,6 +87,8 @@ export class DriverRingtone {
 
   close() {
     this.stop();
+    for (const oscillator of this.chimes) { try { oscillator.stop(); } catch { /* Already ended. */ } }
+    this.chimes.clear();
     if (this.context) { this.context.onstatechange = null; void this.context.close().catch(() => {}); this.context = null; }
   }
 }

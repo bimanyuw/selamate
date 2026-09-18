@@ -10,7 +10,7 @@ requires-python = ">=3.11"
 dependencies = ["pandas>=2.2,<3", "scikit-learn>=1.6,<2", "joblib>=1.4,<2"]
 
 [project.optional-dependencies]
-vision = ["ultralytics>=8,<9", "opencv-python>=4.8,<5", "dill>=0.4,<1"]
+vision = ["ultralytics>=8,<9", "opencv-python>=4.8,<5", "opencv-contrib-python>=4.8,<5", "mediapipe>=0.10.30,<0.11", "dill>=0.4,<1"]
 parquet = ["pyarrow>=19,<24"]
 
 [tool.setuptools.packages.find]

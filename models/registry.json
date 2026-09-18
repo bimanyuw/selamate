@@ -1,1 +1,13 @@
-{ "schema_version": 1, "active_model": null, "models": [] }
+{
+  "schema_version": 1,
+  "active_model": "eye-detector",
+  "models": [
+    { "id": "eye-detector", "name": "Deteksi mata YOLO", "kind": "model", "status": "weights_available", "artifact": "models/eye_detector.pt", "trained_here": false, "provenance": "File model yang diberikan pengguna; riwayat training dan metrik belum diverifikasi.", "metrics": null },
+    { "id": "face-landmarker", "name": "Landmark wajah MediaPipe", "kind": "model", "status": "pretrained", "artifact": "models/face_landmarker.task", "trained_here": false, "provenance": "Pretrained Google v1: bundle face detector, face mesh, dan blendshape.", "source": "https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker", "metrics": null },
+    { "id": "eye-classifier", "name": "Klasifikasi mata tambahan", "kind": "model", "status": "not_trained", "artifact": null, "trained_here": false, "planned_features": ["eye_crop"], "metrics": null },
+    { "id": "driver-behavior", "name": "Model perilaku driver", "kind": "model", "status": "not_trained", "artifact": null, "trained_here": false, "planned_features": ["speed", "speed_limit", "harsh_braking", "harsh_acceleration", "sharp_turns"], "fallback": "Algoritma; data OBD dummy saat sensor belum tersedia.", "metrics": null },
+    { "id": "environment-risk", "name": "Model risiko lingkungan", "kind": "model", "status": "not_trained", "artifact": null, "trained_here": false, "planned_features": ["rainfall", "visibility", "road_condition", "slope", "disaster_risk"], "fallback": "Algoritma dengan data lingkungan dummy.", "metrics": null },
+    { "id": "fatigue-temporal", "name": "Kantuk & indikasi menguap", "kind": "algorithm", "status": "implemented", "trained_here": false, "provenance": "PERCLOS, durasi mata tertutup, dan durasi mulut terbuka; bukan model hasil training.", "metrics": null },
+    { "id": "risk-fusion", "name": "Penggabungan skor bahaya", "kind": "algorithm", "status": "implemented", "trained_here": false, "provenance": "Heuristik skor perjalanan dan kantuk live; bukan model hasil training.", "metrics": null }
+  ]
+}

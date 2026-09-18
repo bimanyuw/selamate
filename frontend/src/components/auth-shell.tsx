@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ApiError, getCurrentUser, loginUser, logoutUser, registerUser, type AuthUser } from '@/lib/api';
 
@@ -64,10 +64,9 @@ export default function AuthShell({ children }: Props) {
   if (user) return children(user, () => void logout(), loggingOut, logoutError);
 
   return <div className="auth-page">
-    <header className="auth-header"><a href="/login" onClick={event => { event.preventDefault(); navigate('/login'); }} className="auth-brand"><img src="/brand/selamate-logo.png" alt="" /><span><img src="/brand/selamate-wordmark.png" alt="SelaMate" /><small>sampai tujuan</small></span></a><span className="auth-header-note">EARLY WARNING SYSTEM</span></header>
     <main className="auth-card">
-      <section className="auth-story"><div className="auth-story-content"><span className="auth-shield"><ShieldCheck /></span><p className="auth-kicker">PANTAU. PAHAMI. ANTISIPASI.</p><h1>Perjalanan lebih siap,<br />lebih terlindungi.</h1><p>Pantau kondisi perjalanan, kelelahan pengemudi, dan risiko lingkungan dalam satu pusat kendali.</p><div className="auth-feature-row"><span><i />Pemantauan armada</span><span><i />Peringatan risiko</span><span><i />Keselamatan driver</span></div></div><p className="auth-map-label">JAWA · INDONESIA <span>LIVE SAFETY NETWORK</span></p></section>
-      <section className="auth-form-panel"><div className="auth-form-heading"><p>{registering ? 'PENDAFTARAN AKUN' : 'SELAMAT DATANG'}</p><h2>{registering ? 'Buat akun' : 'Login'}</h2><span>{registering ? 'Daftar untuk mulai menggunakan SelaMate.' : 'Masuk untuk melanjutkan ke dashboard.'}</span></div>
+      <section className="auth-story"><div className="auth-story-content"><a href="/login" onClick={event => { event.preventDefault(); navigate('/login'); }} className="auth-brand"><img src="/brand/selamate-logo.png" alt="" /><span><img src="/brand/selamate-wordmark.png" alt="SelaMate" /><small>sampai tujuan</small></span></a><h1>Selamat<br />sampai tujuan.</h1><p>SelaMate membantu admin memantau lokasi dan kamera pengemudi, mendeteksi kantuk, serta mengirim pesan dan alarm agar perjalanan lebih aman.</p></div></section>
+      <section className="auth-form-panel"><div className="auth-form-heading"><p>{registering ? 'PENDAFTARAN AKUN' : 'SELAMAT DATANG'}</p><h2>{registering ? 'Buat akun' : 'Login'}</h2>{registering && <span>Daftar untuk mulai menggunakan SelaMate.</span>}</div>
         <form key={registering ? 'register' : 'login'} className="mt-7" onSubmit={event => void submit(event)}>
           <fieldset disabled={busy} className="space-y-4">
             {registering && <label className="block text-sm">Nama lengkap<input className={inputClass} name="name" autoComplete="name" maxLength={120} required /></label>}
@@ -80,6 +79,6 @@ export default function AuthShell({ children }: Props) {
         {error && <p className="mt-4 rounded-lg border border-warning/30 bg-warning-background p-3 text-sm text-warning-foreground" role="alert">{error}</p>}
         <p className="auth-switch">{registering ? 'Sudah punya akun? ' : 'Belum punya akun? '}<a href={registering ? '/login' : '/register'} onClick={event => { event.preventDefault(); if (!busy) navigate(registering ? '/login' : '/register'); }}>{registering ? 'Login' : 'Daftar sekarang'}</a></p>
       </section>
-    </main><footer className="auth-footer"><span>© {new Date().getFullYear()} SelaMate</span><span>Fondasi informasi untuk kesiapsiagaan bersama.</span></footer>
+    </main><footer className="auth-footer"><span>© {new Date().getFullYear()} SelaMate</span><a href="https://commons.wikimedia.org/wiki/File:Blank_map_of_the_world.svg" target="_blank" rel="noreferrer">Peta: Wikimedia Commons · CC0</a></footer>
   </div>;
 }

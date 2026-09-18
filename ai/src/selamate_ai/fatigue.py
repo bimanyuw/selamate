@@ -118,6 +118,73 @@ def detect_image_bytes(data):
     return detect_eye_state(frame)
 
 
+def analyze_live_fatigue(observations, max_observation_gap=1.5):
+    """Live heuristic: five-second warmup, blink filtering, two-second recovery.
+
+    Offline/video summaries intentionally retain their historical maxima. Live
+    state forgets closures preceding a confirmed continuous open-eye recovery.
+    UNKNOWN and dropped frames break both closure and recovery continuity.
+    """
+    samples = list(observations)
+    # Validate the original sequence before clipping/resetting any history.
+    analyze_fatigue(samples, max_observation_gap=max_observation_gap)
+    if not samples:
+        return analyze_fatigue([])
+    end = samples[-1][0]
+    open_start = None
+    checkpoint = samples[0][0]
+    previous_time = None
+    for timestamp, state in samples:
+        contiguous = previous_time is not None and timestamp - previous_time <= max_observation_gap
+        if state == 'OPEN':
+            if open_start is None or not contiguous:
+                open_start = timestamp
+            if timestamp - open_start >= 2:
+                checkpoint = open_start
+        else:
+            open_start = None
+        previous_time = timestamp
+    cutoff = max(checkpoint, end - 15)
+    recent = [(timestamp, state) for timestamp, state in samples if timestamp >= cutoff]
+    result = analyze_fatigue(recent, max_observation_gap=max_observation_gap)
+    known = 0.0
+    episodes = []
+    duration = 0.0
+    count = 0
+    for index, (timestamp, state) in enumerate(recent):
+        interval = recent[index + 1][0] - timestamp if index + 1 < len(recent) else 0
+        observed = min(interval, max_observation_gap)
+        if state != 'UNKNOWN':
+            known += observed
+        if state == 'CLOSED':
+            duration += observed
+            count += 1
+        else:
+            if duration >= 1 and count >= 2:
+                episodes.append(duration)
+            duration = 0.0
+            count = 0
+        if interval > max_observation_gap:
+            if duration >= 1 and count >= 2:
+                episodes.append(duration)
+            duration = 0.0
+            count = 0
+    current = duration if recent[-1][1] == 'CLOSED' and count >= 2 else 0.0
+    if duration >= 1 and count >= 2:
+        episodes.append(duration)
+    maximum = max(episodes, default=0.0)
+    perclos = sum(episodes) / known if known else None
+    score = round(100 * (.6 * min(1, perclos / .4) + .4 * min(1, maximum / 3)), 2) if known else None
+    if score is not None:
+        score = max(score, 70 if current >= 3 else 40 if current >= 1.5 else 0)
+    enough = end - samples[0][0] >= 5 and known >= 2 and result['detection_rate'] >= .5 and recent[-1][1] != 'UNKNOWN'
+    score = score if enough else None
+    result.update(max_closed_duration=maximum, perclos=perclos, closure_events=len(episodes),
+                  current_closed_duration=current, recovery_open_duration=end - open_start if open_start is not None else 0,
+                  fatigue_score=score, fatigue_status='INSUFFICIENT_DATA' if score is None else 'FATIGUED' if score >= 70 else 'DROWSY' if score >= 40 else 'ALERT')
+    return result
+
+
 def analyze_video(video_path, max_duration_seconds=300):
     """Decode every frame and infer eye states; timestamps use video FPS.
 

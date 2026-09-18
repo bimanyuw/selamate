@@ -150,7 +150,8 @@ export default function MonitoringDashboard({ user, logout, loggingOut, logoutEr
   const frameFresh = !!live.sessionKey && age.frame != null && age.frame <= 5;
   const cameraFresh = !!live.sessionKey && age.camera != null && age.camera <= 5;
   const cameraOnline = live.monitoring ? cameraFresh : live.cameraActive;
-  const active = !!live.sessionKey && (telemetryFresh || frameFresh);
+  const activeDrivers = new Set(drivers.filter(driver => driver.camera_active).map(driver => driver.driver_id ?? driver.session_id)).size;
+  const active = activeDrivers > 0;
   const telemetry = snapshot?.telemetry;
   const behavior = telemetry?.behavior;
   const cameraLabel = live.monitoring ? cameraFresh ? 'Kamera driver terhubung' : 'Menunggu kamera driver' : live.cameraActive ? 'Kamera aktif' : 'Kamera offline';
@@ -161,7 +162,7 @@ export default function MonitoringDashboard({ user, logout, loggingOut, logoutEr
     <header className="ews-header">
       <a href="/" className="ews-brand" aria-label="Selamate EWS, beranda"><img className="dashboard-brand-logo" src="/brand/selamate-logo.png" alt="" /><span><img className="dashboard-brand-wordmark" src="/brand/selamate-wordmark.png" alt="SelaMate" /><small>sampai tujuan</small></span></a>
       <div className="header-title"><h1>MONITORING DASHBOARD</h1><p>Early Warning System · Pusat pemantauan perjalanan</p></div>
-      <div className="header-account"><div><Status active={active} warning={!!live.sessionKey && !active}>ARMADA AKTIF <b>{active ? '01' : '00'}</b></Status><small>Sesi yang sedang dipantau</small></div><button className="logout-button" onClick={logout} disabled={loggingOut} aria-label={loggingOut ? 'Sedang logout' : 'Logout'} title={`Logout · ${user.name}`}><LogOut size={18} /><span>{loggingOut ? 'Keluar…' : 'Logout'}</span></button></div>
+      <div className="header-account"><div><Status active={active} warning={!!live.sessionKey && !active}>DRIVER AKTIF <b>{activeDrivers}</b></Status><small>Akun driver dengan kamera terhubung</small></div><button className="logout-button" onClick={logout} disabled={loggingOut} aria-label={loggingOut ? 'Sedang logout' : 'Logout'} title={`Logout · ${user.name}`}><LogOut size={18} /><span>{loggingOut ? 'Keluar…' : 'Logout'}</span></button></div>
     </header>
     <main id="dashboard-content" className="dashboard-main">
       <div className="dashboard-toolbar"><div><p className="eyebrow">OPERASIONAL / MONITORING</p><h2>Pantau perjalanan. Antisipasi risiko.</h2></div><a className="toolbar-action" href="#operator-actions"><Radio size={16} />{live.sessionKey ? 'Kelola sesi' : 'Mulai / pantau sesi'}<ArrowUpRight size={15} /></a></div>
@@ -169,7 +170,7 @@ export default function MonitoringDashboard({ user, logout, loggingOut, logoutEr
       {logoutError && <p className="ews-error" role="alert">{logoutError}</p>}
       {live.error && <p className="ews-error" role="alert"><CircleAlert size={18} />{live.error}</p>}
       <section className="command-center" id="live-monitoring" aria-label="Pusat pemantauan perjalanan">
-        <aside className="command-driver-list">{user.role === 'Admin' && <ActiveDrivers selected={live.monitoring ? live.sessionKey : ''} onSelect={selectDriver} onSessions={setDrivers} disabled={!!live.session || live.starting} />}<div className="command-side-note"><Radio size={16} /><span>Pemantauan langsung<small>Pilih driver untuk melihat lokasi dan kondisi.</small></span></div></aside>
+        <aside className="command-driver-list">{user.role === 'Admin' && <><ActiveDrivers selected={live.monitoring ? live.sessionKey : ''} onSelect={selectDriver} onSessions={setDrivers} autoSelect={false} disabled={!!live.session || live.starting} /></>}<div className="command-side-note"><Radio size={16} /><span>Pemantauan langsung<small>Pilih driver untuk melihat lokasi dan kondisi.</small></span></div></aside>
         <div className="command-map"><div className="command-map-heading"><div><p className="eyebrow">LIVE MONITORING</p><h2>Lokasi & perjalanan driver</h2></div><Status active={telemetryFresh} warning={!!telemetry && !telemetryFresh}>{telemetryFresh ? 'Live' : 'Menunggu GPS'}</Status></div><div className="ews-panel live-map-panel">          <div className="map-toolbar"><div><span className="live-dot" data-active={telemetryFresh} />{live.sessionKey ? 'Sesi pengemudi dipantau' : 'Belum ada sesi dipilih'}</div><span>GPS {telemetry?.accuracy != null ? `±${number(telemetry.accuracy)} m` : 'belum tersedia'}</span></div>
           <Suspense fallback={<div className="map-loading">Memuat peta…</div>}><LiveMap snapshot={snapshot} sessionKey={live.sessionKey} drivers={drivers} onSelect={selectDriver} selectionDisabled={!!live.session || live.starting} stale={!telemetryFresh} /></Suspense>
           <div className="map-footer"><span><span className="route-key" />Jejak GPS selama pemantauan</span><span>{telemetry?.latitude != null && telemetry.longitude != null ? `${telemetry.latitude.toFixed(5)}, ${telemetry.longitude.toFixed(5)}` : 'Menunggu koordinat pengemudi'}</span></div>

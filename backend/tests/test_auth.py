@@ -85,6 +85,8 @@ def test_two_account_live_camera_and_fatigue(client, monkeypatch):
         assert listed[0]['session_id'] == session_id
         assert listed[0]['camera_active'] is True
         monkeypatch.setattr(fatigue, 'detect_image_bytes', lambda _: 'OPEN')
+        from selamate_ai import yawning
+        monkeypatch.setattr(yawning, 'detect_image_bytes', lambda _: {'mouth_state': 'UNKNOWN', 'jaw_open': None, 'status': 'UNAVAILABLE'})
         frame_path = f'/api/driver/sessions/{session_id}/frame'
         for timestamp in range(6):
             assert driver.post(frame_path, data={'timestamp': str(timestamp)}, files={'file': ('frame.jpg', jpeg, 'image/jpeg')}).status_code == 200

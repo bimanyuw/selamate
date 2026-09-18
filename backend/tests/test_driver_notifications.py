@@ -6,6 +6,33 @@ from selamate_backend import driver_routes
 from time import time
 
 
+def test_fleet_locations_are_admin_only_and_share_account_identity():
+    driver_routes._sessions.clear()
+    identity = SimpleNamespace(id='driver', name='Driver', role='Driver')
+    app.dependency_overrides[get_current_user] = lambda: identity
+    try:
+        with TestClient(app) as client:
+            first = client.post('/api/driver/sessions').json()['session_id']
+            second = client.post('/api/driver/sessions').json()['session_id']
+            response = client.post(f'/api/driver/sessions/{first}/telemetry', json={'latitude': -6.2, 'longitude': 106.8, 'fuel_level': 20})
+            assert response.status_code == 200
+            assert response.json()['telemetry']['fuel_level'] == 20
+            assert client.post(f'/api/driver/sessions/{first}/telemetry', json={'fuel_level': 101}).status_code == 422
+            assert client.get(f'/api/driver/sessions/{second}').json()['telemetry'] is None
+            assert client.get('/api/driver/sessions').status_code == 403
+            identity = SimpleNamespace(id='admin', name='Admin', role='Admin')
+            sessions = {item['session_id']: item for item in client.get('/api/driver/sessions').json()['sessions']}
+            assert sessions[first]['driver_id'] == sessions[second]['driver_id'] == 'driver'
+            assert sessions[first]['latitude'] == -6.2
+            assert sessions[first]['longitude'] == 106.8
+            assert 0 <= sessions[first]['telemetry_age_seconds'] < 5
+            assert sessions[second]['latitude'] is None
+            assert sessions[second]['telemetry_age_seconds'] is None
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+        driver_routes._sessions.clear()
+
+
 def test_admin_notifications_authorization_delivery_and_isolation():
     driver_routes._sessions.clear()
     identity = SimpleNamespace(id='driver', name='Driver', role='Driver')

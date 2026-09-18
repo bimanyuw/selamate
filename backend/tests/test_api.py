@@ -31,8 +31,17 @@ def test_simulation_contract(client):
     assert client.get("/missing").status_code == 404
 
 
-def test_ai_has_no_active_predictions(client):
-    assert client.get("/api/ai/status").json()["status"] == "not_implemented"
+def test_ai_registry_reports_real_and_planned_modules(client):
+    status = client.get("/api/ai/status").json()
+    assert status["status"] == "implemented"
+    assert any(item['status'] == 'not_trained' for item in status['models'])
+    assert all(item.get('metrics') is None for item in status['models'])
+
+
+def test_tier_warning_endpoints_are_removed(client):
+    assert client.get('/api/warnings/history').status_code == 404
+    assert client.post('/api/driver/sessions/example/warning', json={}).status_code == 404
+    assert client.post('/api/driver/sessions/example/warning/example/response', json={}).status_code == 404
 
 
 def test_database_mode_reads_persisted_rows(client, monkeypatch):

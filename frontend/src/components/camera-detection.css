@@ -1,0 +1,10 @@
+.camera-detection { display: flex; flex-wrap: wrap; gap: 7px; padding: 10px 12px; color: #305873; font-size: 12px; }
+.camera-detection > span { display: inline-flex; align-items: center; gap: 5px; padding: 6px 8px; background: #edf5fa; border-radius: 9px; }
+.camera-detection > .detection-attention { color: #b54b0c; background: #fff0df; }
+.camera-detection > small { width: 100%; color: #b54b0c; }
+.model-status { margin: 12px; border: 1px solid #dce5ed; border-radius: 12px; padding: 12px; color: #305873; font-size: 12px; }
+.model-status summary { cursor: pointer; font-weight: 650; }
+.model-status ul { padding: 0; list-style: none; }
+.model-status li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #edf0f5; }
+.model-status li small { flex-shrink: 0; color: #8b5d0b; }
+.model-status p { color: #6c8090; line-height: 1.5; }

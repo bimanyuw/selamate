@@ -32,3 +32,88 @@
 
 @media(max-width:820px){.command-shell{display:grid;grid-template-columns:1fr;grid-template-rows:auto auto auto auto;grid-template-areas:'top' 'fleet' 'map' 'monitor';min-height:100vh;overflow:visible}.command-shell .topbar{position:sticky;top:0;z-index:1100;height:64px;padding:0 14px}.fleet-brand-logo{width:32px;height:34px}.fleet-brand-wordmark{width:92px}.fleet-brand small{font-size:6px;letter-spacing:2.2px}.top-slogan{display:none}.command-shell .top-meta{gap:10px}.command-shell .top-meta>.online,.command-shell .top-meta>time{display:none}.command-shell .fleet-panel{min-height:0;border-right:0;border-bottom:1px solid #dfe5ee}.command-shell .panel-title{padding:16px 15px 10px}.command-shell .panel-title h2{font-size:20px}.command-shell .vehicle-list{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(210px,78vw);gap:7px;max-height:none;overflow-x:auto;padding:8px 12px 13px;scroll-snap-type:x proximity}.command-shell .vehicle-row{scroll-snap-align:start;border-color:#e5ebf3;background:#fff}.command-shell .live-foot{display:none}.command-shell .map-panel{min-height:540px;padding:15px 12px}.command-shell .map-header{align-items:flex-start}.command-shell .map-header h1{font-size:18px}.command-shell .fleet-map{min-height:450px}.command-shell .monitor-panel{padding:18px 14px 28px;border-top:1px solid #dfe5ee;border-left:0}.command-shell .camera-feed{max-height:340px}.command-shell .metrics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.command-shell .user-chip{padding-left:0;border-left:0}.command-shell .user-chip>span{display:none}.command-shell .search{margin-inline:12px}.command-shell .filters{overflow-x:auto;grid-template-columns:repeat(4,minmax(68px,1fr))}.command-shell .map-panel{min-height:500px}.command-shell .fleet-map{min-height:410px}.command-shell .route-summary{left:7px;right:7px;bottom:7px;grid-template-columns:1fr 1fr}.command-shell .route-summary>div{padding:9px}.command-shell .route-summary>div:nth-child(3){border-left:0;border-top:1px solid #dfe5ee}.command-shell .route-summary>div:nth-child(4){border-top:1px solid #dfe5ee}.command-shell .metrics-grid{gap:6px}.command-shell .metric{padding:10px 8px}.command-shell .camera-caption{align-items:flex-start;gap:8px}.command-shell .camera-caption small{text-align:right}}
+.real-fleet-dashboard { --red:#ce303d; --safe:#17865b; --amber:#d49512; grid-template-columns:245px minmax(0,1fr) 340px; }
+.real-fleet-dashboard .active-drivers { border:0; border-radius:0; padding:16px 12px; margin:0; flex:1; overflow:auto; }
+.real-fleet-dashboard .active-drivers .panel-heading h2 { font-size:16px; }
+.real-fleet-dashboard .active-driver-list article { flex-wrap:wrap; padding:12px 10px; }
+.real-fleet-dashboard .active-driver-list article > div { flex-basis:155px; }
+.real-fleet-dashboard .active-driver-list button { width:100%; height:35px; }
+.real-fleet-dashboard .control-note { font-size:12px; line-height:1.7; }
+.real-fleet-dashboard .live-session-map { height:100%; }
+
+.real-fleet-dashboard .camera-feed img { object-fit:contain; }
+.real-fleet-dashboard .fatigue-card strong { font:600 15px Inter,system-ui,sans-serif; }
+.fleet-camera-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; text-align:center; min-height:180px; padding:22px; color:#9fb5d5; }
+.fleet-selection-prompt { color:#65758b; min-height:360px; font-size:13px; line-height:1.7; }
+.fleet-selection-prompt h3 { color:#20324c; font-size:16px; font-weight:600; }
+.real-fleet-dashboard .admin-message-form > div { flex-direction:column; gap:8px; }
+.real-fleet-dashboard .admin-message-form input,.real-fleet-dashboard .admin-message-form button { width:100%; }
+.real-fleet-dashboard .admin-message-form p { font-size:12px; }
+.real-fleet-dashboard .safe { color:#17865b!important; }
+.real-fleet-dashboard .critical { color:#ce303d!important; }
+.real-fleet-dashboard .warning { color:#a77500!important; }
+.real-fleet-dashboard .unknown { color:#8191a7!important; }
+.real-fleet-dashboard .online i { background:#17865b; }
+.real-fleet-dashboard .top-slogan strong { font-size:15px; font-weight:650; letter-spacing:.3px; text-transform:none; }
+@media(max-width:1100px){.real-fleet-dashboard{grid-template-columns:210px minmax(0,1fr) 300px}.real-fleet-dashboard .top-slogan{display:none}}
+/* Readable typography and shared status colors for the live command center. */
+.real-fleet-dashboard { font-family:Inter,system-ui,sans-serif; font-size:14px; --muted:#65758b; }
+.real-fleet-dashboard :is(h2,strong,time,.eyebrow) { font-family:inherit; }
+.real-fleet-dashboard .eyebrow { font-size:11px; letter-spacing:1.2px; }
+.real-fleet-dashboard .top-meta,.real-fleet-dashboard .top-meta time,.real-fleet-dashboard .user-chip span { font-size:13px; }
+.real-fleet-dashboard .user-chip small { font-size:10px; }
+.real-fleet-dashboard .map-header h1 { font-size:23px; }
+.real-fleet-dashboard .map-header>div>span { font-size:12px; }
+.real-fleet-dashboard .panel-title h2 { font-family:inherit; font-size:30px; }
+.real-fleet-dashboard .panel-title small { font-size:13px; }
+.real-fleet-dashboard .monitor-head h2 { font-family:inherit; font-size:22px; }
+.real-fleet-dashboard .monitor-head span,.real-fleet-dashboard .camera-caption { font-size:12px; }
+.real-fleet-dashboard .active-driver-list strong { font-size:15px; }
+.real-fleet-dashboard .active-driver-list small { font-size:12px; }
+.real-fleet-dashboard .route-summary span { font-family:inherit; font-size:9px; }
+.real-fleet-dashboard .route-summary strong { font-size:13px; }
+.real-fleet-dashboard .status-safe,.real-fleet-dashboard .tone-safe { --reading-color:#17865b; --reading-bg:#edf9f2; --reading-border:#bce6cf; }
+.real-fleet-dashboard .status-caution,.real-fleet-dashboard .tone-caution { --reading-color:#a77500; --reading-bg:#fffae5; --reading-border:#f0df92; }
+.real-fleet-dashboard .status-danger,.real-fleet-dashboard .tone-danger { --reading-color:#ce303d; --reading-bg:#fff0f1; --reading-border:#f4b9bf; }
+.real-fleet-dashboard .status-attention,.real-fleet-dashboard .tone-attention { --reading-color:#d45508; --reading-bg:#fff1e7; --reading-border:#ffc599; }
+.real-fleet-dashboard .status-unknown,.real-fleet-dashboard .tone-unknown { --reading-color:#8191a7; --reading-bg:#f5f7fa; --reading-border:#dfe5ee; }
+.real-fleet-dashboard .fatigue-card { background:var(--reading-bg); border-color:var(--reading-border); }
+.real-fleet-dashboard .fatigue-card span { font-family:inherit; font-size:11px; }
+.real-fleet-dashboard .fatigue-card p { font-size:12px; margin-top:9px; }
+.fleet-gauge-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0; }
+.fleet-reading { padding:12px 8px; border:1px solid var(--reading-border); border-radius:12px; background:var(--reading-bg); text-align:center; }
+.fleet-reading h3 { display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; font-weight:600; }
+.fleet-reading h3 svg { width:16px; height:16px; color:var(--reading-color); }
+.fleet-reading .dashboard-gauge { height:88px; max-width:145px; }
+.fleet-reading>strong { display:block; font-size:24px; font-weight:650; font-variant-numeric:tabular-nums; }
+.fleet-reading>strong small { font-size:10px; font-weight:400; }
+.fleet-reading>span { display:block; margin-top:6px; font-size:11px; color:var(--reading-color); }
+.real-fleet-dashboard .metric { padding:13px 10px; }
+.real-fleet-dashboard .metric span { font-size:12px; }
+.real-fleet-dashboard .metric strong { font-family:inherit; font-size:19px; }
+.real-fleet-dashboard .metric small { display:block; font-size:10px; margin-top:5px; color:#65758b; }
+.real-fleet-dashboard .metric>svg { color:#8254bf; background:#f1ebff; padding:5px; box-sizing:content-box; border-radius:8px; }
+.real-fleet-dashboard .fleet-fuel { background:var(--reading-bg); border-color:var(--reading-border); }
+.real-fleet-dashboard .fleet-fuel>svg { color:#d45508; background:#ffead9; }
+.real-fleet-dashboard .active-driver-list article>svg { color:#1746a2; background:#eaf1ff; padding:6px; box-sizing:content-box; border-radius:9px; }
+.real-fleet-dashboard .active-driver-list [data-fatigue='DROWSY'],.real-fleet-dashboard .active-driver-list [data-fatigue='FATIGUED'] { background:#fff0f1; border-color:#f4b9bf; }
+.real-fleet-dashboard .active-driver-list [data-fatigue='ALERT'] { background:#edf9f2; border-color:#bce6cf; }
+.fleet-environment-alert { display:flex; gap:10px; padding:13px; margin:12px 0; border:1px solid var(--reading-border); background:var(--reading-bg); color:var(--reading-color); border-radius:12px; }
+.fleet-environment-alert>svg { width:21px; flex-shrink:0; }
+.fleet-environment-alert strong { font-size:13px; }
+.fleet-environment-alert p { font-size:12px; margin-top:5px; }
+.real-fleet-dashboard .journey-trend { padding:14px 10px; border:1px solid #dfe5ee; margin:14px 0; border-radius:12px; }
+.real-fleet-dashboard .journey-trend .panel-heading h2 { font-size:16px; font-weight:650; }
+.real-fleet-dashboard .journey-trend .eyebrow { font-size:9px; letter-spacing:.5px; }
+.real-fleet-dashboard .journey-trend .panel-heading>svg { width:20px; color:#f56a0a; }
+.real-fleet-dashboard .journey-trend-chart { height:165px; }
+.real-fleet-dashboard .trend-legend { font-size:10px; gap:10px; }
+.real-fleet-dashboard .trend-footnote { font-size:10px; line-height:1.6; }
+.real-fleet-dashboard .vehicle-status h3 { font-size:15px; }
+.real-fleet-dashboard .vehicle-status span { font-size:12px; }
+.real-fleet-dashboard .vehicle-status strong { font-size:13px; }
+.real-fleet-dashboard .vehicle-status svg { color:#17865b; }
+.real-fleet-dashboard .admin-message-form label { font-size:15px; }
+.real-fleet-dashboard .admin-message-form input { font-size:13px; }
+.real-fleet-dashboard .admin-ring-button { background:#f56a0a; }
+.real-fleet-dashboard .admin-ring-button:hover { background:#d45508; }

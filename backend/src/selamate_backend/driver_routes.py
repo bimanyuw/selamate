@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 from fastapi.responses import Response
 from PIL import Image, UnidentifiedImageError
 from pydantic import Field
-from selamate_ai import behavior, environment, fatigue, fusion
+from selamate_ai import behavior, environment, fatigue, fusion, yawning
 from .schemas import AIRequest, BehaviorRequest, EnvironmentRequest
 from .auth import get_current_user, admin_user
 from .models import User
@@ -27,6 +27,8 @@ class TelemetryRequest(AIRequest):
     accuracy: float | None = Field(default=None, ge=0)
     speed_source: str | None = Field(default=None, pattern="^(gps|obd)$")
     rpm: float | None = Field(default=None, ge=0, le=20000)
+    fuel_level: float | None = Field(default=None, ge=0, le=100)
+    engine_temperature: float | None = Field(default=None, ge=-40, le=200)
     behavior: BehaviorRequest | None = None
     environment: EnvironmentRequest | None = None
 
@@ -46,11 +48,13 @@ class AlarmStateRequest(AIRequest):
 
 @dataclass
 class DriverSession:
+    started: float = field(default_factory=monotonic)
     owner_id: str = ""
     owner_name: str = ""
     touched: float = field(default_factory=monotonic)
     lock: Lock = field(default_factory=Lock)
     observations: deque = field(default_factory=lambda: deque(maxlen=300))
+    mouth_observations: deque = field(default_factory=lambda: deque(maxlen=300))
     telemetry: dict | None = None
     fatigue_result: dict | None = None
     frame_received: float | None = None
@@ -63,6 +67,7 @@ class DriverSession:
     camera_received: float | None = None
     camera_version: int = 0
     audio_ready: bool = False
+    admin_seen: float | None = None
 
 
 _sessions: dict[str, DriverSession] = {}
@@ -99,6 +104,8 @@ def _snapshot(session, include_notifications=False):
             and frame_age is not None and frame_age <= 5 and telemetry_age is not None and telemetry_age <= 5):
         combined = fusion.fuse_risk(session.fatigue_result["fatigue_score"], session.behavior_result["behavior_score"], session.environment_result["environment_score"])
     return {"telemetry": session.telemetry, "fatigue": session.fatigue_result,
+            "session_duration_seconds": max(0, now - session.started),
+            "admin_monitoring": session.admin_seen is not None and now - session.admin_seen <= 8,
             "behavior": session.behavior_result, "environment": session.environment_result,
             "risk": combined, "frame_age_seconds": frame_age, "telemetry_age_seconds": telemetry_age,
             "notifications": list(session.notifications) if include_notifications else [],
@@ -127,7 +134,7 @@ def active_sessions(admin: User = Depends(admin_user)):
     for session_id, session in items:
         with session.lock:
             age = monotonic() - session.camera_received if session.camera_received is not None else None
-            result.append({"session_id": session_id, "driver_name": session.owner_name,
+            result.append({"session_id": session_id, "driver_id": session.owner_id, "driver_name": session.owner_name,
                            "camera_active": age is not None and age <= 5,
                            "latitude": (session.telemetry or {}).get("latitude"),
                            "longitude": (session.telemetry or {}).get("longitude"),
@@ -179,6 +186,8 @@ def publish_camera(session_id: str, file: UploadFile, user: User = Depends(get_c
 def session_snapshot(session_id: str, user: User = Depends(get_current_user)):
     session = _session(session_id)
     with session.lock:
+        if getattr(user, "role", "Driver") == "Admin":
+            session.admin_seen = monotonic()
         return _snapshot(session, user.id == session.owner_id or getattr(user, "role", "Driver") == "Admin")
 
 
@@ -260,14 +269,21 @@ def update_frame(session_id: str, file: UploadFile, timestamp: float = Form(ge=0
         with session.lock:
             if session.observations and timestamp <= session.observations[-1][0]:
                 raise HTTPException(422, "Timestamp frame harus meningkat")
-            state = fatigue.detect_image_bytes(data)
+            yolo_state = fatigue.detect_image_bytes(data)
+            mouth = yawning.detect_image_bytes(data)
+            state = yawning.resolve_eye_state(yolo_state, mouth)
             session.observations.append((timestamp, state))
+            session.mouth_observations.append((timestamp, mouth["mouth_state"]))
             while len(session.observations) > 1 and session.observations[0][0] < timestamp - 60:
                 session.observations.popleft()
-            result = fatigue.analyze_fatigue(session.observations, max_observation_gap=1.5)
+            while len(session.mouth_observations) > 1 and session.mouth_observations[0][0] < timestamp - 60:
+                session.mouth_observations.popleft()
+            result = fatigue.analyze_live_fatigue(session.observations, max_observation_gap=1.5)
+            result = yawning.combine_fatigue(result, yawning.analyze_live_yawning(session.mouth_observations))
             if timestamp - session.observations[0][0] < 5:
                 result["fatigue_status"] = "INSUFFICIENT_DATA"
-            session.fatigue_result = {**result, "eye_state": state}
+                result["fatigue_score"] = None
+            session.fatigue_result = {**result, "eye_state": state, "yolo_eye_state": yolo_state, **mouth}
             session.frame_received = monotonic()
             return _snapshot(session, True)
     except HTTPException:

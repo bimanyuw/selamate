@@ -95,7 +95,7 @@ Register/login tersedia pada `/register` dan `/login`, dengan logout di header d
 - GET /api/health — status API, bukan jaminan koneksi database.
 - GET /api/health/database — pemeriksaan koneksi database (503 jika tidak tersedia).
 - GET /api/alerts — data simulasi atau record database sesuai konfigurasi.
-- GET /api/ai/status — status registry model lama; terpisah dari ketersediaan endpoint scoring.
+- GET /api/ai/status — registry model tersedia/pretrained, rencana model belum dilatih, dan modul algoritma; tidak mengklaim training atau metrik yang belum ada. Setup deteksi menguap ada di `models/README.md`.
 
 - POST /api/behavior — scoring perilaku mengemudi.
 - POST /api/environment — scoring risiko lingkungan.

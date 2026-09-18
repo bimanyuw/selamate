@@ -125,10 +125,20 @@ export function fuseRisk(input: RiskInput, signal?: AbortSignal): Promise<RiskRe
 
 export type DriverTelemetry = {
   latitude: number | null; longitude: number | null; accuracy: number | null;
-  speed_source: 'gps' | 'obd' | null; rpm: number | null;
+  speed_source: 'gps' | 'obd' | null; rpm: number | null; fuel_level?: number | null; engine_temperature?: number | null;
   behavior: BehaviorInput | null; environment: EnvironmentInput | null;
 };
-export type DriverNotification = { id: string; message: string; sender: string; created_at: number; kind?: 'text' | 'ringtone'; expires_at?: number | null; state?: 'pending' | 'ringing' | 'acknowledged' | null };
+export type JourneyRisk = {
+  overall_risk_score: number | null; risk_level: RiskLevel | null;
+  method: 'algorithm'; coverage: number; missing_components: string[];
+  components: Record<string, { score: number; weight: number; effective_weight: number }>;
+  reasons: string[]; safety_floor: number; hazard_data_available: boolean;
+  nearby_hazards: (Alert & { distance_km: number; proximity_score: number })[];
+};
+export function scoreJourney(input: DriverTelemetry & { session_id?: string }, signal?: AbortSignal): Promise<JourneyRisk> {
+  return post('journey-risk', input, signal);
+}
+export type DriverNotification = { id: string; message: string; sender: string; created_at: number; kind?: 'text' | 'ringtone'; expires_at?: number | null; state?: 'pending' | 'ringing' | 'acknowledged' | null; local?: boolean };
 export function notifyDriver(id: string, message: string, kind: 'text' | 'ringtone' = 'text'): Promise<DriverNotification> {
   return post(`driver/sessions/${encodeURIComponent(id)}/notifications`, { message, kind });
 }
@@ -139,12 +149,14 @@ export function updateDriverAlarm(id: string, notificationId: string, state: 'ri
   return post(`driver/sessions/${encodeURIComponent(id)}/notifications/${encodeURIComponent(notificationId)}/state`, { state });
 }
 export type DriverSnapshot = {
+  session_duration_seconds?: number;
+  admin_monitoring?: boolean;
   audio_ready?: boolean;
   camera_version?: number;
   camera_age_seconds?: number | null;
   notifications?: DriverNotification[];
   telemetry: DriverTelemetry | null;
-  fatigue: (FatigueResponse & { eye_state: 'OPEN' | 'CLOSED' | 'UNKNOWN' }) | null;
+  fatigue: (FatigueResponse & { eye_state: 'OPEN' | 'CLOSED' | 'UNKNOWN'; mouth_state?: 'OPEN' | 'CLOSED' | 'UNKNOWN'; status?: 'READY' | 'NO_FACE' | 'UNAVAILABLE'; jaw_open?: number | null; yawn_count?: number; yawn_score?: number | null; eye_fatigue_score?: number | null }) | null;
   behavior: BehaviorResponse | null; environment: EnvironmentResponse | null; risk: RiskResponse | null;
   frame_age_seconds: number | null; telemetry_age_seconds: number | null;
 };
@@ -172,7 +184,7 @@ export type AdminSummary = { activeUsers: number; systemStatus: string; dataSour
 export function getAdminSummary(signal?: AbortSignal): Promise<AdminSummary> {
   return request('admin/summary', { signal });
 }
-export type ActiveDriverSession = { session_id: string; driver_name: string; camera_active: boolean; fatigue_status: FatigueResponse['fatigue_status'] | null; latitude?: number | null; longitude?: number | null; telemetry_age_seconds?: number | null };
+export type ActiveDriverSession = { session_id: string; driver_id?: string; driver_name: string; camera_active: boolean; fatigue_status: FatigueResponse['fatigue_status'] | null; latitude?: number | null; longitude?: number | null; telemetry_age_seconds?: number | null };
 export function getActiveDriverSessions(signal?: AbortSignal): Promise<{ sessions: ActiveDriverSession[] }> {
   return request('driver/sessions', { signal });
 }

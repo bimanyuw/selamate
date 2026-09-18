@@ -17,6 +17,7 @@ from .models import Alert, User
 from .schemas import AlertResponse, AlertsResponse
 from .ai_routes import router as ai_router
 from .driver_routes import router as driver_router
+from .journey_routes import router as journey_router
 from .auth import router as auth_router, get_current_user, admin_user
 
 app = FastAPI(title="Selamate EWS API", version="0.2.0")
@@ -30,6 +31,7 @@ app.add_middleware(
 app.include_router(ai_router, prefix="/api")
 app.include_router(ai_router, include_in_schema=False)
 app.include_router(driver_router, prefix="/api")
+app.include_router(journey_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 
 
